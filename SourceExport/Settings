@@ -1,0 +1,73 @@
+{
+	"configuration.inherits": "Defaults",
+	"project.appTitle": "ucExplorer",
+	"project.autoPrettify": true,
+	"project.buildPath": "${SourcePath}\\Build\\${ProjectName}_${Architecture}.${FileExtension}",
+	"project.buildType": "ActiveX Control",
+	"project.description": "IExplorerBrowser Active-X Control v0.1",
+	"project.exportAfterSave": true,
+	"project.exportPath": "${SourcePath}\\${ProjectName}_Export",
+	"project.exportPathIsV2": true,
+	"project.exportVerbose": true,
+	"project.forceDpiAwarenessAtStartup": "NONE",
+	"project.id": "{8B9D198E-30E8-4B18-8563-7FCCC908F45D}",
+	"project.licence": "MIT",
+	"project.name": "ucExplorer",
+	"project.optionExplicit": true,
+	"project.references": [
+		{
+			"id": "{00020430-0000-0000-C000-000000000046}",
+			"lcid": 0,
+			"name": "OLE Automation",
+			"path32": "C:\\Windows\\SysWOW64\\stdole2.tlb",
+			"path64": "C:\\Windows\\System32\\stdole2.tlb",
+			"versionMajor": 2,
+			"versionMinor": 0
+		},
+		{
+			"hasBeenSplit": true,
+			"id": "{F50B82D0-DCAB-43FE-9631-11959D4A4728}",
+			"isCompilerPackage": true,
+			"licence": "MIT",
+			"name": "[COMPILER PACKAGE] WinNativeForms Package",
+			"path32": "",
+			"path64": "",
+			"publisher": "TWINBASIC-COMPILER",
+			"symbolId": "WinFormsPackage",
+			"versionBuild": 0,
+			"versionMajor": 0,
+			"versionMinor": 0,
+			"versionRevision": 31
+		},
+		{
+			"id": "{1FCDB98D-617D-4995-9736-2ED0E4746A10}",
+			"licence": "MIT",
+			"name": "[IMPORTED] twinBASIC Shell Library v3.10.72",
+			"path32": "/Packages/tbShellLib",
+			"path64": "/Packages/tbShellLib",
+			"publishedDate": "19-MAR-2023",
+			"publishedTime": "22:38:40",
+			"publisher": "fafalone",
+			"symbolId": "tbShellLib",
+			"versionBuild": "0",
+			"versionMajor": "3",
+			"versionMinor": "10",
+			"versionRevision": "72"
+		}
+	],
+	"project.settingsVersion": 1,
+	"project.useProjectIdForTypeLibraryId": true,
+	"project.versionBuild": 1,
+	"project.versionLegalCopyright": "(c) 2023",
+	"project.versionMajor": 0,
+	"project.versionMinor": 1,
+	"project.versionProductName": "ucExplorer",
+	"project.warnings": {
+		"errors": [
+			"TB0002",
+			"TB0003"
+		],
+		"ignored": []
+	},
+	"runtime.useUnicodeStandardLibrary": true
+}

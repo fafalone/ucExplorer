@@ -1,0 +1,9 @@
+[ Description ("") ]
+[ FormDesignerId ("D5F0A647-D70A-4D12-9987-1086DB076D25") ]
+[ PredeclaredId ]
+Class TestControl
+
+	Sub New()
+	End Sub
+
+End Class
