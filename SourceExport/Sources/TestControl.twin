@@ -5,5 +5,9 @@ Class TestControl
 
 	Sub New()
 	End Sub
+    
+    Private Sub Form_Load() Handles Form.Load
+        
+    End Sub
 
 End Class

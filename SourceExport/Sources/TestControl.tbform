@@ -76,15 +76,15 @@
 			"showGrid": true,
 			"showOutlines": false
 		},
-		"__lastUpdateMarker": 1677076974,
+		"__lastUpdateMarker": 1863058423,
 		"_children": [
 			{
 				"Align": false,
 				"AlwaysNavigate": true,
 				"Anchors": {
-					"Bottom": false,
+					"Bottom": true,
 					"Left": true,
-					"Right": false,
+					"Right": true,
 					"Top": true,
 					"_className": "Anchors",
 					"_clsid": "{8524D4B5-72A9-40A9-A189-29E7905C40CA}"
@@ -110,10 +110,10 @@
 				"Left": 8,
 				"Name": "ucExplorer1",
 				"NavigateOnce": false,
-				"NoBorder": false,
+				"NoBorder": true,
 				"NoPersistView": false,
 				"NoTravelLog": false,
-				"NoWrapperWindow": false,
+				"NoWrapperWindow": true,
 				"ShowAdvancedQueryPane": "ExPS_InitialDisabled",
 				"ShowCommandPane": "ExPS_DefaultEnabled",
 				"ShowDetailsPane": "ExPS_DefaultEnabled",
@@ -137,7 +137,7 @@
 				"Visible": true,
 				"WhatsThisHelpID": 0,
 				"Width": 590,
-				"_IPersistStreamData": "6urq6pOyAABQAAAABQAIAAvyV0ckAAAAXwBlAHgAdABlAG4AdAB4AAAAAAAAScFABQAIAAryV0fc////XwBlAHgAdABlAG4AdAB5AAAAAAAAFrdA",
+				"_IPersistStreamData": "6urq6pOyAACkAAAACwAOACYknXAsAAAAaQBuAHQAZQByAG4AYQBsAGIAbwByAGQAZQByAAAAAAALAA0AGCa4wCgAAAB3AHIAYQBwAHAAZQByAHcAaQBuAGQAbwB3AAAABQAIAAvyV0ckAAAAXwBlAHgAdABlAG4AdAB4AAAAAAAAScFABQAIAAryV0eI////XwBlAHgAdABlAG4AdAB5AAAAAAAAFrdA",
 				"_className": "ucExplorer.ucExplorer",
 				"_clsid": "{CC7A1E10-C7B6-49F5-A680-1B3AFA03A463}"
 			},

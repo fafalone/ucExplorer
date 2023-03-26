@@ -328,7 +328,7 @@ Private Sub IExplorerPaneVisibility_GetPaneState(ep As UUID, peps As EXPLORERPAN
 End Sub
 
 Private Sub ICommDlgBrowser_OnDefaultCommand(ByVal ppshv As IShellView) Implements ICommDlgBrowser.OnDefaultCommand
-    
+    Err.ReturnHresult = E_NOTIMPL
 End Sub
 
 Private Sub ICommDlgBrowser_IncludeObject(ByVal ppshv As IShellView, ByVal pidl As LongPtr) Implements ICommDlgBrowser.IncludeObject
@@ -1034,38 +1034,38 @@ Public Function GetCurrentPathItem() As IShellItem
 	Set GetCurrentPathItem = siCurPath
 End Function
 
-    Private Sub ReadActualWindowsVersion()
-    'Read the Windows version independent of any compatibility shim
-    'NOTE: This is not an exhaustive list of versions, it only checks for the versions relevant to this program.
+Private Sub ReadActualWindowsVersion()
+'Read the Windows version independent of any compatibility shim
+'NOTE: This is not an exhaustive list of versions, it only checks for the versions relevant to this program.
+
+Dim tPEB As PEB_XP 'Use minimal PEB version; OS version info always at 0x118 (x64)
+
+Dim hProc As LongPtr = GetCurrentProcess()
+Dim tProcInfo As PROCESS_BASIC_INFORMATION
+Dim cbRet As Long
+Dim ntStatus As Long
+
+ntStatus = NtQueryInformationProcess(hProc, ProcessBasicInformation, tProcInfo, LenB(tProcInfo), cbRet)
+
+If (ntStatus = STATUS_SUCCESS) And (cbRet > 0) Then
+    #If Win64 Then
+        CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &H128
+    #Else
+        CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &HB4
+    #End If
     
-    Dim tPEB As PEB_XP 'Use minimal PEB version; OS version info always at 0x118 (x64)
-    
-    Dim hProc As LongPtr = GetCurrentProcess()
-    Dim tProcInfo As PROCESS_BASIC_INFORMATION
-    Dim cbRet As Long
-    Dim ntStatus As Long
-    
-    ntStatus = NtQueryInformationProcess(hProc, ProcessBasicInformation, tProcInfo, LenB(tProcInfo), cbRet)
-    
-    If (ntStatus = STATUS_SUCCESS) And (cbRet > 0) Then
-        #If Win64 Then
-            CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &H128
-        #Else
-            CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &HB4
-        #End If
-        
-        Debug.Print tPEB.OSMajorVersion & "." & tPEB.OSMinorVersion & "." & tPEB.OSBuildNumber
-        If tPEB.OSMajorVersion >= 10 Then
-        	bIsWinVistaOrGreater = True
+    Debug.Print tPEB.OSMajorVersion & "." & tPEB.OSMinorVersion & "." & tPEB.OSBuildNumber
+    If tPEB.OSMajorVersion >= 10 Then
+        bIsWinVistaOrGreater = True
+        bIsWin8OrGreater = True
+        Exit Sub
+    End If
+    If tPEB.OSMajorVersion >= 6 Then
+        bIsWinVistaOrGreater = True
+        If (tPEB.OSMajorVersion >= 6) And (tPEB.OSMinorVersion >= 2) Then
             bIsWin8OrGreater = True
-            Exit Sub
-        End If
-        If tPEB.OSMajorVersion >= 6 Then
-            bIsWinVistaOrGreater = True
-            If (tPEB.OSMajorVersion >= 6) And (tPEB.OSMinorVersion >= 2) Then
-                bIsWin8OrGreater = True
-            End If
         End If
     End If
-    End Sub
+End If
+End Sub
 End Class
