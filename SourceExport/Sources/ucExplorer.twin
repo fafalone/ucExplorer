@@ -6,7 +6,7 @@
 Public Class ucExplorer
 /*
    ucExplorer - IExplorerBrowser Active-X Control
-   Version 0.1
+   Version 0.2
    by Jon Johnson (fafalone)
    https://www.github.com/fafalone/ucExplorer :: fafalone at gmail
    
@@ -26,12 +26,28 @@ Implements ICommDlgBrowser3
 'Implements IMessageFilter
 Implements IObjectSafety
 
+
 Private bIsWinVistaOrGreater As Boolean
 Private bIsWin8OrGreater As Boolean
 
 Private pExp As IExplorerBrowser
 Private siCurPath As IShellItem
+Private svCurView As IShellView
 Private pRF As IResultsFolder
+
+Public Enum ucexpGetView
+    EB_GETCURVIEW_ISHELLVIEW = 1
+    EB_GETCURVIEW_ISHELLVIEW2
+    EB_GETCURVIEW_ISHELLVIEW3
+    EB_GETCURVIEW_IFOLDERVIEW
+    EB_GETCURVIEW_IFOLDERVIEW2
+    EB_GETCURVIEW_ISHELLFOLDER
+    EB_GETCURVIEW_ISHELLFOLDER2
+    EB_GETCURVIEW_ISHELLBROWSER
+    EB_GETCURVIEW_ISHELLBROWSER2
+    EB_GETCURVIEW_ISHELLITEM
+    EB_GETCURVIEW_ISHELLITEM2
+End Enum
 
 Private mFiltered As Boolean
 
@@ -139,6 +155,7 @@ Private Const mDefCheck As Boolean = False
 Private dwAdvCookie As Long
 
 Public Event OnNavigationPending(ByVal pidlFolder As LongPtr, ByVal sParsingPath As String, ByVal psiItem As IShellItem)
+Public Event OnPreViewCreated(ByVal pshvw As IShellView)
 Public Event OnViewCreated(ByVal pshvw As IShellView)
 Public Event OnNavigationComplete(ByVal pidlFolder As LongPtr, ByVal sParsingPath As String, ByVal psiItem As IShellItem)
 Public Event OnNavigationFailed(ByVal pidlFolder As LongPtr, ByVal sParsingPath As String, ByVal psiItem As IShellItem)
@@ -197,7 +214,7 @@ Private Sub IServiceProvider_QueryService(guidService As UUID, riid As UUID, ppv
         Err.ReturnHResult = pUnk.QueryInterface(IID_IExplorerPaneVisibility, ppvObject)
         Exit Sub
     ElseIf IsEqualGUID(guidService, SID_SExplorerBrowserFrame) Then
-        Debug.Print "SID_SExplorerBrowserFrame for " & dbg_GUIDToString(riid)
+        'Debug.Print "SID_SExplorerBrowserFrame for " & dbg_GUIDToString(riid)
         Set pUnk = Me
         Err.ReturnHResult = pUnk.QueryInterface(riid, ppvObject)
         Exit Sub
@@ -237,6 +254,8 @@ Private Sub IExplorerBrowserEvents_OnNavigationPending(ByVal pidlFolder As LongP
 End Sub
 
 Private Sub IExplorerBrowserEvents_OnViewCreated(ByVal psv As IShellView) Implements IExplorerBrowserEvents.OnViewCreated
+    Set svCurView = Nothing
+    Set svCurView = psv
     RaiseEvent OnViewCreated(psv)
     psv.GetCurrentInfo mCurOpt
     If mKeepVM Then
@@ -352,12 +371,12 @@ End Sub
 
 Private Sub ICommDlgBrowser_IncludeObject(ByVal ppshv As IShellView, ByVal pidl As LongPtr) Implements ICommDlgBrowser3.IncludeObject
 'This shouldn't be called when an IFolderFilter is in place.
+'DebugAppend CurrentProcedureName & "::Entry, master=" & mFiltered
 If mFiltered = False Then
     Err.ReturnHResult = S_OK
     Exit Sub
 End If
 
-DebugAppend CurrentProcedureName & "::Entry"
 Dim psi As IShellItem
 Dim lpName As LongPtr, sName As String
 Dim dwAtr As SFGAO_Flags
@@ -480,7 +499,7 @@ Private Sub ICommDlgBrowser3_GetCurrentFilter(pszFileSpec As LongPtr, ByVal cchF
 End Sub
 
 Private Sub ICommDlgBrowser3_OnPreViewCreated(ByVal ppshv As IShellView) Implements ICommDlgBrowser3.OnPreViewCreated
-    
+    RaiseEvent OnPreViewCreated(ppshv)
 End Sub
 #End Region
 
@@ -935,6 +954,7 @@ Private Sub UserControl_Terminate() Handles UserControl.Terminate
     End If
     
     Set siCurPath = Nothing
+    Set svCurView = Nothing
     
     If pExp IsNot Nothing Then
         pExp.Destroy()
@@ -956,6 +976,8 @@ If ((mFilter = "*") OrElse (mFilter = "*.*") OrElse (mFilter = "")) AndAlso _
     ((mFilterD = "*") OrElse (mFilterD = "*.*") OrElse (mFilterD = "")) Then
     'Master filter toggle-- if no filtering enabled, shut down filter procedure with a 
     'simple boolean rather than compare ever file,
+    mFiltered = False
+Else
     mFiltered = True
 End If
     
@@ -1000,16 +1022,17 @@ pExp.SetOptions lFlag
 If mCustET <> "" Then pExp.SetEmptyText(mCustET)
 pExp.Advise Me, dwAdvCookie
 
-'Set up file name/folder name filtering
-'If fDbgSetFilter Then
-' Dim pFiltSite As IFolderFilterSite
-' Set pFiltSite = pExp
-' If pFiltSite IsNot Nothing Then
-' 	pFiltSite.SetFilter Me
-' End If
-'End If
+'The following is an alternative filtering method, if you implement this
+'one then disable ICommDlgBrowser_IncludeObject based filtering.
+If fDbgSetFilter Then
+Dim pFiltSite As IFolderFilterSite
+Set pFiltSite = pExp
+If pFiltSite IsNot Nothing Then
+	pFiltSite.SetFilter Me
+End If
+End If
 
-'Set up IServiceProvider services (for now, just pane visibility)
+'Set up IServiceProvider services
 If fDbgSetSite Then
 Dim pSite As IObjectWithSite
 Set pSite = pExp
@@ -1085,6 +1108,49 @@ If pExp IsNot Nothing Then
     pExp.GetCurrentView IID_IShellView, pSV
     pSV.Refresh()
 End If
+End Sub
+
+[ Description ("Set the columns used by Details view. This takes a comma-delimited list of canonical names, e.g. System.ItemNameDisplay,System.ItemTypeText -- you could pass only System.ItemNameDisplay to clear all columns.") ]
+Public Sub SetColumns(ByVal pszColumnList As String)
+	Dim pColMgr As IColumnManager
+    Dim sCol() As String
+    Dim pk() As PROPERTYKEY
+    Dim pkTmp As PROPERTYKEY
+    Dim i As Long
+    Dim nValid As Long
+    Dim hr As Long
+    If pszColumnList = "" Then Exit Sub
+    If pExp Is Nothing Then Exit Sub
+    sCol = Split(pszColumnList, ",")
+    For i = 0 To UBound(sCol)
+        hr = PSGetPropertyKeyFromName(StrPtr(sCol(i)), pkTmp)
+        If IsEqualPKEY(pkTmp, PKEY_Null) = False Then
+            ReDim Preserve pk(nValid)
+            pk(nValid) = pkTmp
+            nValid += 1
+        End If
+    Next
+    If nValid Then
+        Dim pfv As IFolderView2
+        pExp.GetCurrentView IID_IFolderView2, pfv
+        If pfv IsNot Nothing Then
+            Set pColMgr = pfv
+            pColMgr.SetColumns pk(0), nValid
+        End If
+    End If
+End Sub
+
+[ Description ("Set the columns used by Details view. This takes a pointer to the first member of an array of PROPERTYKEY and the 1-based count of items. WARNING: Specifying an invalid count may crash the app.") ]
+Public Sub SetColumnByPKEY(ByVal ptrKey0 As LongPtr, ByVal cKeys As Long)
+    Dim pColMgr As IColumnManager
+    If cKeys Then
+        Dim pfv As IFolderView2
+        pExp.GetCurrentView IID_IFolderView2, pfv
+        If pfv IsNot Nothing Then
+            Set pColMgr = pfv
+            pColMgr.SetColumns ptrKey0, cKeys
+        End If
+    End If
 End Sub
 
 [ Description ("Populates an array of the currently selected full paths. The return value returns the selection count, which is also UBound(sPaths) + 1.") ]
@@ -1170,39 +1236,67 @@ Public Function GetCurrentPathItem() As IShellItem
 	Set GetCurrentPathItem = siCurPath
 End Function
 
+Public Function GetCurrentView(ByVal nView As ucexpGetView, ppv As IUnknown) As Long
+	Select Case nView
+        Case EB_GETCURVIEW_IFOLDERVIEW: pExp.GetCurrentView(IID_IFolderView, ppv)
+        Case EB_GETCURVIEW_IFOLDERVIEW2: pExp.GetCurrentView(IID_IFolderView2, ppv)
+        Case EB_GETCURVIEW_ISHELLVIEW: pExp.GetCurrentView(IID_IShellView, ppv)
+        Case EB_GETCURVIEW_ISHELLVIEW2: pExp.GetCurrentView(IID_IShellView2, ppv)
+        Case EB_GETCURVIEW_ISHELLVIEW3: pExp.GetCurrentView(IID_IShellView3, ppv)
+        Case EB_GETCURVIEW_ISHELLFOLDER: pExp.GetCurrentView(IID_IShellFolder, ppv)
+        Case EB_GETCURVIEW_ISHELLFOLDER2: pExp.GetCurrentView(IID_IShellFolder2, ppv)
+        Case EB_GETCURVIEW_ISHELLITEM: pExp.GetCurrentView(IID_IShellItem, ppv)
+	End Select
+    Return Err.LastHResult
+End Function
+
 Private Sub ReadActualWindowsVersion()
 'Read the Windows version independent of any compatibility shim
 'NOTE: This is not an exhaustive list of versions, it only checks for the versions relevant to this program.
-
-Dim tPEB As PEB_XP 'Use minimal PEB version; OS version info always at 0x118 (x64)
-
-Dim hProc As LongPtr = GetCurrentProcess()
-Dim tProcInfo As PROCESS_BASIC_INFORMATION
-Dim cbRet As Long
-Dim ntStatus As Long
-
-ntStatus = NtQueryInformationProcess(hProc, ProcessBasicInformation, tProcInfo, LenB(tProcInfo), cbRet)
-
-If (ntStatus = STATUS_SUCCESS) And (cbRet > 0) Then
-    #If Win64 Then
-        CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &H128
-    #Else
-        CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &HB4
-    #End If
-    
-    Debug.Print tPEB.OSMajorVersion & "." & tPEB.OSMinorVersion & "." & tPEB.OSBuildNumber
-    If tPEB.OSMajorVersion >= 10 Then
-        bIsWinVistaOrGreater = True
+Dim osi As OSVERSIONINFOEX
+RtlGetVersion osi
+If osi.dwMajorVersion >= 10 Then
+    bIsWinVistaOrGreater = True
+    bIsWin8OrGreater = True
+    Exit Sub
+End If
+If osi.dwMajorVersion >= 6 Then
+    bIsWinVistaOrGreater = True
+    If (osi.dwMajorVersion >= 6) And (osi.dwMinorVersion >= 2) Then
         bIsWin8OrGreater = True
-        Exit Sub
-    End If
-    If tPEB.OSMajorVersion >= 6 Then
-        bIsWinVistaOrGreater = True
-        If (tPEB.OSMajorVersion >= 6) And (tPEB.OSMinorVersion >= 2) Then
-            bIsWin8OrGreater = True
-        End If
     End If
 End If
+
+'A more fun way:
+' Dim tPEB As PEB_XP 'Use minimal PEB version; OS version info always at 0x118 (x64)
+
+' Dim hProc As LongPtr = GetCurrentProcess()
+' Dim tProcInfo As PROCESS_BASIC_INFORMATION
+' Dim cbRet As Long
+' Dim ntStatus As Long
+
+' ntStatus = NtQueryInformationProcess(hProc, ProcessBasicInformation, tProcInfo, LenB(tProcInfo), cbRet)
+
+' If (ntStatus = STATUS_SUCCESS) And (cbRet > 0) Then
+'     #If Win64 Then
+'         CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &H128
+'     #Else
+'         CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &HB4
+'     #End If
+    
+'     Debug.Print tPEB.OSMajorVersion & "." & tPEB.OSMinorVersion & "." & tPEB.OSBuildNumber
+'     If tPEB.OSMajorVersion >= 10 Then
+'         bIsWinVistaOrGreater = True
+'         bIsWin8OrGreater = True
+'         Exit Sub
+'     End If
+'     If tPEB.OSMajorVersion >= 6 Then
+'         bIsWinVistaOrGreater = True
+'         If (tPEB.OSMajorVersion >= 6) And (tPEB.OSMinorVersion >= 2) Then
+'             bIsWin8OrGreater = True
+'         End If
+'     End If
+' End If
 End Sub
 
 
