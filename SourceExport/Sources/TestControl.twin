@@ -3,11 +3,36 @@
 [ PredeclaredId ]
 Class TestControl
 
-	Sub New()
-	End Sub
+Sub New()
+End Sub
+
+Private Sub Form_Load() Handles Form.Load
     
-    Private Sub Form_Load() Handles Form.Load
-        
-    End Sub
+End Sub
+
+Private Sub ucExplorer1_OnNavigationComplete(ByVal pidlFolder As LongPtr, ByVal sParsingPath As String, ByVal psiItem As IShellItem) Handles ucExplorer1.OnNavigationComplete
+    Debug.Print "OnNavigationComplete " & sParsingPath
+End Sub
+
+Private Sub ucExplorer1_OnSelectionChange(ByVal nCurrentSelCount As Long, sParsingPaths() As String, ByVal ppsiaSelection As IShellItemArray) Handles ucExplorer1.OnSelectionChange
+    Debug.Print "Selection changed, count = " & nCurrentSelCount
+    If nCurrentSelCount > 0 Then
+        Debug.Print Join(sParsingPaths, vbCrLf)
+    End If
+End Sub
+
+Private Sub cmdBrowse_Click() Handles cmdBrowse.Click
+    ucExplorer1.BrowseToPath Text1.Text
+End Sub
+
+
+Private Sub cmdBack_Click() Handles cmdBack.Click
+    ucExplorer1.BrowseGoBack
+End Sub
+
+Private Sub cmdFwd_Click() Handles cmdFwd.Click
+    ucExplorer1.BrowseGoForward
+End Sub
+
 
 End Class

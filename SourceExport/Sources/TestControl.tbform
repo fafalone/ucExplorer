@@ -4,8 +4,8 @@
 		"Appearance": "vbAppear3d",
 		"AutoRedraw": false,
 		"BackColor": -2147483633,
-		"BorderStyle": "vbSizable",
-		"Caption": null,
+		"BorderStyle": "vbFixedSingle",
+		"Caption": "ucExplorer Test Form",
 		"ClipControls": true,
 		"ControlBox": true,
 		"DrawMode": "vbCopyPen",
@@ -76,7 +76,7 @@
 			"showGrid": true,
 			"showOutlines": false
 		},
-		"__lastUpdateMarker": 1863058423,
+		"__lastUpdateMarker": 3276919850,
 		"_children": [
 			{
 				"Align": false,
@@ -95,7 +95,7 @@
 				"Dock": "vbDockNone",
 				"DragIcon": "",
 				"DragMode": "vbManual",
-				"FilterFiles": "*",
+				"FilterFiles": "*.exe",
 				"FilterFolders": "*",
 				"FontBold": false,
 				"FontItalic": false,
@@ -110,10 +110,10 @@
 				"Left": 8,
 				"Name": "ucExplorer1",
 				"NavigateOnce": false,
-				"NoBorder": true,
+				"NoBorder": false,
 				"NoPersistView": false,
 				"NoTravelLog": false,
-				"NoWrapperWindow": true,
+				"NoWrapperWindow": false,
 				"ShowAdvancedQueryPane": "ExPS_InitialDisabled",
 				"ShowCommandPane": "ExPS_DefaultEnabled",
 				"ShowDetailsPane": "ExPS_DefaultEnabled",
@@ -132,12 +132,13 @@
 				"Tag": null,
 				"ToolTipText": null,
 				"Top": 38,
+				"UseSelectVerb": true,
 				"ViewModeDefault": "VIEWMODE_AUTO",
 				"ViewModeForce": false,
 				"Visible": true,
 				"WhatsThisHelpID": 0,
 				"Width": 590,
-				"_IPersistStreamData": "6urq6pOyAACkAAAACwAOACYknXAsAAAAaQBuAHQAZQByAG4AYQBsAGIAbwByAGQAZQByAAAAAAALAA0AGCa4wCgAAAB3AHIAYQBwAHAAZQByAHcAaQBuAGQAbwB3AAAABQAIAAvyV0ckAAAAXwBlAHgAdABlAG4AdAB4AAAAAAAAScFABQAIAAryV0eI////XwBlAHgAdABlAG4AdAB5AAAAAAAAFrdA",
+				"_IPersistStreamData": "6urq6pOyAACAAAAACAALAI25VRswAAAAZgBpAGwAdABlAHIAZgBpAGwAZQBzAAUAAAAqAC4AZQB4AGUABQAIAAvyV0ckAAAAXwBlAHgAdABlAG4AdAB4AAAAAAAAScFABQAIAAryV0es////XwBlAHgAdABlAG4AdAB5AAAAAAAAFrdA",
 				"_className": "ucExplorer.ucExplorer",
 				"_clsid": "{CC7A1E10-C7B6-49F5-A680-1B3AFA03A463}"
 			},
@@ -195,7 +196,9 @@
 				"WhatsThisHelpID": 0,
 				"Width": 72,
 				"_className": "CommandButton",
-				"_clsid": "{33AD4EF0-6699-11CF-B70C-00AA0060D393}"
+				"_clsid": "{33AD4EF0-6699-11CF-B70C-00AA0060D393}",
+				"_designerClick": 917552,
+				"_propertyChanged__designerClick": true
 			},
 			{
 				"Anchors": {
@@ -251,7 +254,9 @@
 				"WhatsThisHelpID": 0,
 				"Width": 58,
 				"_className": "CommandButton",
-				"_clsid": "{33AD4EF0-6699-11CF-B70C-00AA0060D393}"
+				"_clsid": "{33AD4EF0-6699-11CF-B70C-00AA0060D393}",
+				"_designerClick": 851984,
+				"_propertyChanged__designerClick": true
 			},
 			{
 				"Alignment": "vbLeftJustify",
