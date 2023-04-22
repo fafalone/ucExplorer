@@ -3,8 +3,8 @@
 	"project.appTitle": "ucExplorer",
 	"project.autoPrettify": true,
 	"project.buildPath": "${SourcePath}\\Build\\${ProjectName}_${Architecture}.${FileExtension}",
-	"project.buildType": "ActiveX Control",
-	"project.description": "ucExplorerBrowser Active-X Control v0.9",
+	"project.buildType": "Standard EXE",
+	"project.description": "IExplorerBrowser Active-X Control v0.1",
 	"project.exportAfterSave": true,
 	"project.exportPath": "${SourcePath}\\${ProjectName}_Export",
 	"project.exportPathIsV2": true,
@@ -56,12 +56,12 @@
 		}
 	],
 	"project.settingsVersion": 1,
+	"project.startupObject": "Sub Main",
 	"project.useProjectIdForTypeLibraryId": true,
 	"project.versionBuild": 1,
-	"project.versionFileDescription": "ucExplorer Beta 1",
 	"project.versionLegalCopyright": "(c) 2023",
 	"project.versionMajor": 0,
-	"project.versionMinor": 9,
+	"project.versionMinor": 1,
 	"project.versionProductName": "ucExplorer",
 	"project.warnings": {
 		"errors": [

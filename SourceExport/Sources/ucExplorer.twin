@@ -6,9 +6,9 @@
 Public Class ucExplorer
 /*
    ucExplorer - IExplorerBrowser Active-X Control
-   Version Beta 0.9.1
-   by Jon Johnson (fafalone)
-   https://www.github.com/fafalone/ucExplorer :: fafalone at gmail
+   Version Beta 0.9.2
+   by Jon Johnson (fafalone) :: fafalone at gmail
+   https://www.github.com/fafalone/ucExplorer
    
    This control is designed to wrap the IExplorerBrowser control/ExplorerBrowser
    COM object. It can be built for both 32bit and 64bit hosts.
@@ -196,6 +196,9 @@ Right$("00" & Hex$(CLng(tg.Data4(3))), 2) & Right$("00" & Hex$(CLng(tg.Data4(4))
 Right$("00" & Hex$(CLng(tg.Data4(6))), 2) & Right$("00" & Hex$(CLng(tg.Data4(7))), 2)
 If bBrack Then dbg_GUIDToString = "{" & dbg_GUIDToString & "}"
 End Function
+
+
+
 #Region "InterfaceImpls"
 Private Sub IObjectSafety_GetInterfaceSafetyOptions(riid As UUID, pdwSupportedOptions As Long, pdwEnabledOptions As Long) Implements IObjectSafety.GetInterfaceSafetyOptions
 Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
@@ -843,7 +846,7 @@ mNoBorder = PropBag.ReadProperty("InternalBorder", Not mDefNoBorder)
 mNoWrapper = PropBag.ReadProperty("WrapperWindow", Not mDefNoWrapper)
 mSharePoint = PropBag.ReadProperty("HTMLSharepointView", mDefSharePoint)
 mDefView = PropBag.ReadProperty("ViewModeDefault", mDefDefView)
-mKeepVM = PropBag.ReadProperty("ViewModeForce", mKeepVM)
+mKeepVM = PropBag.ReadProperty("ViewModeForce", mDefKeepVM)
 mNoLog = PropBag.ReadProperty("NoTravelLog", mDefNoLog)
 mNavOnce = PropBag.ReadProperty("NavigateOnce", mDefNavOnce)
 mShowFrames = PropBag.ReadProperty("ShowFrames", mDefShowFrames)
@@ -1040,12 +1043,10 @@ End If
 End If
 
 'Set up IServiceProvider services
-If fDbgSetSite Then
 Dim pSite As IObjectWithSite
 Set pSite = pExp
 If pSite IsNot Nothing Then
     pSite.SetSite Me
-End If
 End If
 
 If psi Is Nothing Then
@@ -1116,6 +1117,11 @@ If pExp IsNot Nothing Then
     pSV.Refresh()
 End If
 End Sub
+
+Public Sub ClearBrowser()
+    If pExp IsNot Nothing Then pExp.RemoveAll()
+End Sub
+
 
 [ Description ("Set the columns used by Details view. This takes a comma-delimited list of canonical names, e.g. System.ItemNameDisplay,System.ItemTypeText -- you could pass only System.ItemNameDisplay to clear all columns.") ]
 Public Sub SetColumns(ByVal pszColumnList As String)
