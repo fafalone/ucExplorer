@@ -6,7 +6,7 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
-I've added a test app for the compiled OCX, and compiled OCXs. 
+I've added a test app for the compiled OCX, and compiled OCXs. Note that if you're not building the OCXs yourself, they'll need to be registered, there's currently reg-free sxs, though I will add a manifest for that at some point.
 
 ---
 
