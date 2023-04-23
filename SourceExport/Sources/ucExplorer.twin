@@ -44,7 +44,6 @@ Public Enum ucexpGetView
     EB_GETCURVIEW_ISHELLFOLDER
     EB_GETCURVIEW_ISHELLFOLDER2
     EB_GETCURVIEW_ISHELLBROWSER
-    EB_GETCURVIEW_ISHELLBROWSER2
     EB_GETCURVIEW_ISHELLITEM
     EB_GETCURVIEW_ISHELLITEM2
 End Enum
@@ -1260,6 +1259,8 @@ Public Function GetCurrentView(ByVal nView As ucexpGetView, ppv As IUnknown) As 
         Case EB_GETCURVIEW_ISHELLFOLDER: pExp.GetCurrentView(IID_IShellFolder, ppv)
         Case EB_GETCURVIEW_ISHELLFOLDER2: pExp.GetCurrentView(IID_IShellFolder2, ppv)
         Case EB_GETCURVIEW_ISHELLITEM: pExp.GetCurrentView(IID_IShellItem, ppv)
+        Case EB_GETCURVIEW_ISHELLITEM2: pExp.GetCurrentView(IID_IShellItem2, ppv)
+        Case EB_GETCURVIEW_ISHELLBROWSER: pExp.GetCurrentView(IID_IShellBrowser, ppv)
     End Select
     Return Err.LastHResult
 End Function
