@@ -6,6 +6,10 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
+I've added a test app for the compiled OCX, and compiled OCXs. 
+
+---
+
 Beta 0.9.2 now available, this makes some final code cleanup and settings adjustments before build testing. Once I've confirmed it works in at least some hosts I'll post compiled OCX builds to Releases as well. 
 
 
