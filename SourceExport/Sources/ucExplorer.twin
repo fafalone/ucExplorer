@@ -6,7 +6,7 @@
 Public Class ucExplorer
 /*
    ucExplorer - IExplorerBrowser Active-X Control
-   Version Beta 0.9.2
+   Version Beta 0.9.3
    by Jon Johnson (fafalone) :: fafalone at gmail
    https://www.github.com/fafalone/ucExplorer
    
@@ -953,6 +953,21 @@ End Sub
 Private Sub UserControl_Terminate() Handles UserControl.Terminate
     If dwAdvCookie Then
         pExp.Unadvise dwAdvCookie
+    End If
+    
+    If fDbgSetFilter Then
+    Dim pFiltSite As IFolderFilterSite
+    Set pFiltSite = pExp
+    If pFiltSite IsNot Nothing Then
+        pFiltSite.SetFilter Nothing
+    End If
+    End If
+
+    'Set up IServiceProvider services
+    Dim pSite As IObjectWithSite
+    Set pSite = pExp
+    If pSite IsNot Nothing Then
+        pSite.SetSite Nothing
     End If
     
     Set siCurPath = Nothing
