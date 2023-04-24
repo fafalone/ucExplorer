@@ -930,8 +930,7 @@ Private Sub UserControl_Resize() Handles UserControl.Resize
 On Error Resume Next
 If pExp IsNot Nothing Then
     Dim prc As RECT
-    prc.Right = Me.ScaleWidth * m_ScaleX
-    prc.Bottom = Me.ScaleHeight * m_ScaleY
+    GetClientRect UserControl.hWnd, prc
     #If Win64 Then
         pExp.SetRect 0, prc
     #Else
