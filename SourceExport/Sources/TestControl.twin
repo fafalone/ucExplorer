@@ -17,7 +17,9 @@ End Sub
 Private Sub ucExplorer1_OnSelectionChange(ByVal nCurrentSelCount As Long, sParsingPaths() As String, ByVal ppsiaSelection As IShellItemArray) Handles ucExplorer1.OnSelectionChange
     Debug.Print "Selection changed, count = " & nCurrentSelCount
     If nCurrentSelCount > 0 Then
-        Debug.Print Join(sParsingPaths, vbCrLf)
+        Text2.Text = Join(sParsingPaths, ", ")
+    Else
+        Text2.Text = ""
     End If
 End Sub
 

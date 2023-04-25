@@ -6,7 +6,7 @@
 Public Class ucExplorer
 /*
    ucExplorer - IExplorerBrowser Active-X Control
-   Version Beta 0.9.3
+   Version Beta 0.9.4
    by Jon Johnson (fafalone) :: fafalone at gmail
    https://www.github.com/fafalone/ucExplorer
    
@@ -950,6 +950,7 @@ Private Sub UserControl_Initialize() Handles UserControl.Initialize
 End Sub
 
 Private Sub UserControl_Terminate() Handles UserControl.Terminate
+    DebugAppend "UserControl_Terminate"
     If dwAdvCookie Then
         pExp.Unadvise dwAdvCookie
     End If
@@ -973,6 +974,7 @@ Private Sub UserControl_Terminate() Handles UserControl.Terminate
     Set svCurView = Nothing
     
     If pExp IsNot Nothing Then
+        pExp.FillFromObject Nothing, EBF_NODROPTARGET
         pExp.Destroy()
         Set pExp = Nothing
     End If

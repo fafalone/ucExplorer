@@ -2,8 +2,6 @@ Module modTestApp
 
 Sub Main()
     TestControl.Show
-    D3D11CreateDevice Nothing, D3D_DRIVER_TYPE_HARDWARE, 0, 0, ByVal 0, 0, 0, Nothing, 0, Nothing
-    
 End Sub
 
 
