@@ -6,6 +6,8 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
+4/24 Beta 0.9.4 *actually* fixes the sizing issue (it seems to have gotten reverted in 0.9.3) and makes another attempt at addressing VBA x64 crash-on-exit.
+
 4/24 Beta 0.9.3 fixes the sizing issue on scaled displays and attempts to address crash-on-close issue in some 64bit Office VBA hosts (but the good news there, it's successfully running and generally working in 64bit Office!). Also fixed the 'doesn't work on XP' message for VB6 running in compatibility mode... had been under the mistaken impression RtlGetVersion didn't lie to you the same way GetVersionEx did.
 
 4/23 afternoon: OCXs updated to address small bug where GetCurrentView did not return all options. OCX test app has been updated to display selection and size the control; tbcontrol-version test app updated to sync code to master. Also confirmed ocx is working (both x86/x64) in tB, next step is to test in VB6 and VBA. Then .NET.
