@@ -1,17 +1,19 @@
 {
 	"configuration.inherits": "Defaults",
-	"project.appTitle": "ucExplorerTP",
+	"project.appTitle": "ZZucExplorer",
 	"project.autoPrettify": true,
-	"project.buildPath": "${SourcePath}\\Build\\${ProjectName}_${Architecture}.${FileExtension}",
-	"project.buildType": "Standard EXE",
-	"project.description": "ucExplorer Test Platform v0.1",
+	"project.buildPath": "${SourcePath}\\Build\\${Architecture}\\${ProjectName}.${FileExtension}",
+	"project.buildType": "ActiveX Control",
+	"project.description": "ucExplorer - IExplorerBrowser Wrapper Control v0.9.4",
+	"project.dllRegisterLocalMachine": true,
 	"project.exportAfterSave": true,
 	"project.exportPath": "${SourcePath}\\${ProjectName}_Export",
 	"project.exportPathIsV2": true,
 	"project.exportVerbose": true,
-	"project.id": "{8B9D198E-30E8-4B18-8563-7FCCC908F45D}",
+	"project.forceDpiAwarenessAtStartup": "NONE",
+	"project.id": "{217988D5-67C2-4A21-800C-AD76D5D0EBCA}",
 	"project.licence": "MIT",
-	"project.name": "ucExplorerTP",
+	"project.name": "ZZucExplorer",
 	"project.optionExplicit": true,
 	"project.references": [
 		{
@@ -55,12 +57,13 @@
 		}
 	],
 	"project.settingsVersion": 1,
-	"project.startupObject": "Sub Main",
 	"project.useProjectIdForTypeLibraryId": true,
-	"project.versionBuild": 1,
+	"project.versionBuild": 5,
+	"project.versionCompanyName": "JAJ Productions",
+	"project.versionFileDescription": "ucExplorer Beta 2",
 	"project.versionLegalCopyright": "(c) 2023",
 	"project.versionMajor": 0,
-	"project.versionMinor": 1,
+	"project.versionMinor": 9,
 	"project.versionProductName": "ucExplorer",
 	"project.warnings": {
 		"errors": [

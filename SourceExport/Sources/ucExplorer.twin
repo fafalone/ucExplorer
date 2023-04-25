@@ -1,17 +1,25 @@
 [ FormDesignerId ("B8967B80-A030-4278-9286-5E32AB2E3154") ]
-[ ClassId ("CC7A1E10-C7B6-49F5-A680-1B3AFA03A463") ]
-[ InterfaceId ("30FCD2AD-9E29-4B71-B78B-790E0273EC6A") ]
-[ EventInterfaceId ("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47B") ]
+[ ClassId ("CC7A1E10-C7B6-49F5-A680-1B3AFA03A464") ]
+[ InterfaceId ("30FCD2AD-9E29-4B71-B78B-790E0273EC6B") ]
+[ EventInterfaceId ("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47C") ]
 [ COMControl ]
-Public Class ucExplorer
+Public Class ZZucExplorer
+Private Const mTitle As String = "ucExplorer Beta 0.9.5"
 /*
    ucExplorer - IExplorerBrowser Active-X Control
-   Version Beta 0.9.4
+   Version Beta 0.9.5
    by Jon Johnson (fafalone) :: fafalone at gmail
    https://www.github.com/fafalone/ucExplorer
    
    This control is designed to wrap the IExplorerBrowser control/ExplorerBrowser
    COM object. It can be built for both 32bit and 64bit hosts.
+   
+   
+   Debugging info, ignore:
+   Original project id: {8B9D198E-30E8-4B18-8563-7FCCC908F45D}
+   Original class id: [ ClassId ("CC7A1E10-C7B6-49F5-A680-1B3AFA03A463") ]
+   Original interface id: [ InterfaceId ("30FCD2AD-9E29-4B71-B78B-790E0273EC6A") ]
+   Original event interface id: [ EventInterfaceId ("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47B") ]   
 */
 
 Private Const fDbgSetSite As Boolean = True
@@ -974,6 +982,8 @@ Private Sub UserControl_Terminate() Handles UserControl.Terminate
     Set svCurView = Nothing
     
     If pExp IsNot Nothing Then
+        pExp.RemoveAll
+        pExp.SetOptions EBO_NONE
         pExp.FillFromObject Nothing, EBF_NODROPTARGET
         pExp.Destroy()
         Set pExp = Nothing
@@ -989,7 +999,12 @@ If bIsWinVistaOrGreater = False Then
     Exit Sub
 End If
 
-If Ambient.UserMode = False Then Exit Sub
+If Ambient.UserMode = False Then
+    lblTitle.Caption = mTitle
+    Exit Sub
+Else
+    lblTitle.Visible = False
+End If
 
 On Error GoTo e0
 
