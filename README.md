@@ -6,6 +6,8 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
+4/25 Beta 0.9.5 renames the control to ZZucExplorer and changes the GUIDs so it's seen as a whole new control. This is neccessary to avoid caching issues while having multiple builds for debugging the crashing. Also added some more attempts to mitigate that. Added version string in design mode.
+
 4/24 Beta 0.9.4 *actually* fixes the sizing issue (it seems to have gotten reverted in 0.9.3) and makes another attempt at addressing VBA x64 crash-on-exit.
 
 4/24 Beta 0.9.3 fixes the sizing issue on scaled displays and attempts to address crash-on-close issue in some 64bit Office VBA hosts (but the good news there, it's successfully running and generally working in 64bit Office!). Also fixed the 'doesn't work on XP' message for VB6 running in compatibility mode... had been under the mistaken impression RtlGetVersion didn't lie to you the same way GetVersionEx did.
