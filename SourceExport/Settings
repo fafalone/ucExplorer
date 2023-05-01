@@ -4,7 +4,7 @@
 	"project.autoPrettify": true,
 	"project.buildPath": "${SourcePath}\\Build\\${Architecture}\\${ProjectName}.${FileExtension}",
 	"project.buildType": "ActiveX Control",
-	"project.description": "ucExplorer - IExplorerBrowser Wrapper Control v0.9.4",
+	"project.description": "ucExplorer - IExplorerBrowser Wrapper Control v0.9.5",
 	"project.dllRegisterLocalMachine": true,
 	"project.exportAfterSave": true,
 	"project.exportPath": "${SourcePath}\\${ProjectName}_Export",
@@ -64,7 +64,7 @@
 	"project.versionLegalCopyright": "(c) 2023",
 	"project.versionMajor": 0,
 	"project.versionMinor": 9,
-	"project.versionProductName": "ucExplorer",
+	"project.versionProductName": "ZZucExplorer",
 	"project.warnings": {
 		"errors": [
 			"TB0002",

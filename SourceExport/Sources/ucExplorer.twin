@@ -4,10 +4,10 @@
 [ EventInterfaceId ("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47C") ]
 [ COMControl ]
 Public Class ZZucExplorer
-Private Const mTitle As String = "ucExplorer Beta 0.9.5"
+Private Const mTitle As String = "ucExplorer Beta 0.9.6"
 /*
    ucExplorer - IExplorerBrowser Active-X Control
-   Version Beta 0.9.5
+   Version Beta 0.9.6
    by Jon Johnson (fafalone) :: fafalone at gmail
    https://www.github.com/fafalone/ucExplorer
    
@@ -42,6 +42,8 @@ Private pExp As IExplorerBrowser
 Private siCurPath As IShellItem
 Private svCurView As IShellView
 Private pRF As IResultsFolder
+
+Private hShell32 As LongPtr
 
 Public Enum ucexpGetView
     EB_GETCURVIEW_ISHELLVIEW = 1
@@ -1003,6 +1005,10 @@ If Ambient.UserMode = False Then
     lblTitle.Caption = mTitle
     Exit Sub
 Else
+    hShell32 = LoadLibrary("shell32.dll")
+    If hShell32 = 0 Then
+        DebugAppend "Failed to load shell32"
+    End If
     lblTitle.Visible = False
 End If
 
