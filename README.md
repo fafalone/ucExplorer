@@ -6,6 +6,8 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
+4/30 Beta 0.9.6 crash mitigation proposal from wqweto added.
+
 4/25 Beta 0.9.5 renames the control to ZZucExplorer and changes the GUIDs so it's seen as a whole new control. This is neccessary to avoid caching issues while having multiple builds for debugging the crashing. Also added some more attempts to mitigate that. Added version string in design mode.
 
 4/24 Beta 0.9.4 *actually* fixes the sizing issue (it seems to have gotten reverted in 0.9.3) and makes another attempt at addressing VBA x64 crash-on-exit.
