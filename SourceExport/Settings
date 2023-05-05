@@ -1,6 +1,6 @@
 {
 	"configuration.inherits": "Defaults",
-	"project.appTitle": "ZZucExplorer",
+	"project.appTitle": "ZZZucExplorer",
 	"project.autoPrettify": true,
 	"project.buildPath": "${SourcePath}\\Build\\${Architecture}\\${ProjectName}.${FileExtension}",
 	"project.buildType": "ActiveX Control",
@@ -11,9 +11,9 @@
 	"project.exportPathIsV2": true,
 	"project.exportVerbose": true,
 	"project.forceDpiAwarenessAtStartup": "NONE",
-	"project.id": "{217988D5-67C2-4A21-800C-AD76D5D0EBCA}",
+	"project.id": "{34196E98-9B62-4329-A49B-E867A7BCFCAE}",
 	"project.licence": "MIT",
-	"project.name": "ZZucExplorer",
+	"project.name": "ZZZucExplorer",
 	"project.optionExplicit": true,
 	"project.references": [
 		{
@@ -58,13 +58,13 @@
 	],
 	"project.settingsVersion": 1,
 	"project.useProjectIdForTypeLibraryId": true,
-	"project.versionBuild": 5,
+	"project.versionBuild": 7,
 	"project.versionCompanyName": "JAJ Productions",
 	"project.versionFileDescription": "ucExplorer Beta 2",
 	"project.versionLegalCopyright": "(c) 2023",
 	"project.versionMajor": 0,
 	"project.versionMinor": 9,
-	"project.versionProductName": "ZZucExplorer",
+	"project.versionProductName": "ZZZucExplorer",
 	"project.warnings": {
 		"errors": [
 			"TB0002",

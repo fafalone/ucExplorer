@@ -1,13 +1,13 @@
 [ FormDesignerId ("B8967B80-A030-4278-9286-5E32AB2E3154") ]
-[ ClassId ("CC7A1E10-C7B6-49F5-A680-1B3AFA03A464") ]
-[ InterfaceId ("30FCD2AD-9E29-4B71-B78B-790E0273EC6B") ]
-[ EventInterfaceId ("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47C") ]
+[ ClassId ("CC7A1E10-C7B6-49F5-A680-1B3AFA03A466") ]
+[ InterfaceId ("30FCD2AD-9E29-4B71-B78B-790E0273EC6D") ]
+[ EventInterfaceId ("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47E") ]
 [ COMControl ]
-Public Class ZZucExplorer
-Private Const mTitle As String = "ucExplorer Beta 0.9.6"
+Public Class ZZZucExplorer
+Private Const mTitle As String = "ucExplorer Beta 0.9.7"
 /*
    ucExplorer - IExplorerBrowser Active-X Control
-   Version Beta 0.9.6
+   Version Beta 0.9.7
    by Jon Johnson (fafalone) :: fafalone at gmail
    https://www.github.com/fafalone/ucExplorer
    
@@ -42,6 +42,8 @@ Private pExp As IExplorerBrowser
 Private siCurPath As IShellItem
 Private svCurView As IShellView
 Private pRF As IResultsFolder
+
+Private bTerm As Boolean
 
 Private hShell32 As LongPtr
 
@@ -218,6 +220,10 @@ Private Sub IObjectSafety_SetInterfaceSafetyOptions(riid As UUID, ByVal dwOption
 End Sub
 
 Private Sub IServiceProvider_QueryService(guidService As UUID, riid As UUID, ppvObject As LongPtr) Implements IServiceProvider.QueryService
+    If bTerm Then
+       Err.ReturnHResult = E_NOINTERFACE
+       Exit Sub
+    End If
     
     Dim pUnk As IUnknownUnrestricted
     
@@ -950,6 +956,10 @@ End If
 End Sub
 
 Private Sub UserControl_Initialize() Handles UserControl.Initialize
+    hShell32 = LoadLibrary("shell32.dll")
+    If hShell32 = 0 Then
+        DebugAppend "Failed to load shell32"
+    End If
     DebugAppend "UserControl_Initialize"
     Dim hDC As LongPtr
     hDC = GetDC(0&)
@@ -961,6 +971,7 @@ End Sub
 
 Private Sub UserControl_Terminate() Handles UserControl.Terminate
     DebugAppend "UserControl_Terminate"
+    bTerm = True
     If dwAdvCookie Then
         pExp.Unadvise dwAdvCookie
     End If
@@ -974,11 +985,11 @@ Private Sub UserControl_Terminate() Handles UserControl.Terminate
     End If
 
     'Set up IServiceProvider services
-    Dim pSite As IObjectWithSite
-    Set pSite = pExp
-    If pSite IsNot Nothing Then
-        pSite.SetSite Nothing
-    End If
+    ' Dim pSite As IObjectWithSite
+    ' Set pSite = pExp
+    ' If pSite IsNot Nothing Then
+    '     pSite.SetSite Nothing
+    ' End If
     
     Set siCurPath = Nothing
     Set svCurView = Nothing
@@ -987,7 +998,7 @@ Private Sub UserControl_Terminate() Handles UserControl.Terminate
         pExp.RemoveAll
         pExp.SetOptions EBO_NONE
         pExp.FillFromObject Nothing, EBF_NODROPTARGET
-        pExp.Destroy()
+        'pExp.Destroy()
         Set pExp = Nothing
     End If
     
@@ -1005,10 +1016,6 @@ If Ambient.UserMode = False Then
     lblTitle.Caption = mTitle
     Exit Sub
 Else
-    hShell32 = LoadLibrary("shell32.dll")
-    If hShell32 = 0 Then
-        DebugAppend "Failed to load shell32"
-    End If
     lblTitle.Visible = False
 End If
 
