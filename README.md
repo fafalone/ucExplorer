@@ -6,6 +6,8 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
+5/04 Beta 0.9.7 new crash mitigation attempt
+
 4/30 Beta 0.9.6 crash mitigation proposal from wqweto added.
 
 4/25 Beta 0.9.5 renames the control to ZZucExplorer and changes the GUIDs so it's seen as a whole new control. This is neccessary to avoid caching issues while having multiple builds for debugging the crashing. Also added some more attempts to mitigate that. Added version string in design mode.
