@@ -6,6 +6,8 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
+**Update (19 Dec 2023):** .twinproj updated to reference WinDevLib (formerly tbShellLib) 7.0-- this eliminates package errors that tB did not raise at the time this project was initially released.
+
 5/04 Beta 0.9.7 new crash mitigation attempt
 
 4/30 Beta 0.9.6 crash mitigation proposal from wqweto added.
