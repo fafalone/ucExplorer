@@ -6,6 +6,8 @@ You should use the [most recent build](https://github.com/twinbasic/twinbasic/re
 
 ### Updates
 
+**Update (05 Jul 2026):** Source .twinproj files have been updated to work with syntax rule changes and bug fixes in newer twinBASIC and WinDevLib versions.
+
 **Update (03 Mar 2024):** .twinproj has been updated to use a more recent version of WinDevLib (formerly tbShellLib) due to errors in the package tB did not raise at the time this project was released.
 
 **Update (19 Dec 2023):** .twinproj updated to reference WinDevLib (formerly tbShellLib) 7.0-- this eliminates package errors that tB did not raise at the time this project was initially released.
