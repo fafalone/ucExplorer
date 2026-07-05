@@ -1,0 +1,1385 @@
+[FormDesignerId("B8967B80-A030-4278-9286-5E32AB2E3154")]
+[ClassId("CC7A1E10-C7B6-49F5-A680-1B3AFA03A466")]
+[InterfaceId("30FCD2AD-9E29-4B71-B78B-790E0273EC6D")]
+[EventInterfaceId("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47E")]
+[Description("ucExplorer - IExplorerBrowser Wrapper Control v0.9.7")]
+[COMControl]
+Public Class ucExplorer
+Private Const mTitle As String = "ucExplorer Beta 0.9.7"
+/*
+   ucExplorer - IExplorerBrowser Active-X Control
+   Version Beta 0.9.7
+   by Jon Johnson (fafalone) :: fafalone at gmail
+   https://www.github.com/fafalone/ucExplorer
+   
+   This control is designed to wrap the IExplorerBrowser control/ExplorerBrowser
+   COM object. It can be built for both 32bit and 64bit hosts.
+   
+   
+   Debugging info, ignore:
+   Original project id: {8B9D198E-30E8-4B18-8563-7FCCC908F45D}
+   Original class id: [ ClassId ("CC7A1E10-C7B6-49F5-A680-1B3AFA03A463") ]
+   Original interface id: [ InterfaceId ("30FCD2AD-9E29-4B71-B78B-790E0273EC6A") ]
+   Original event interface id: [ EventInterfaceId ("CE7BEAD5-C8F2-4D39-B415-9EF300A9E47B") ]   
+*/
+
+Private Const fDbgSetSite As Boolean = True
+Private Const fDbgSetFilter As Boolean = False
+
+
+Implements IExplorerBrowserEvents
+Implements IExplorerPaneVisibility
+Implements IServiceProvider
+'Implements IFolderFilter
+Implements ICommDlgBrowser3
+'Implements IMessageFilter
+Implements IObjectSafety
+
+
+Private bIsWinVistaOrGreater As Boolean
+Private bIsWin8OrGreater As Boolean
+
+Private pExp As IExplorerBrowser
+Private siCurPath As IShellItem
+Private svCurView As IShellView
+Private pRF As IResultsFolder
+
+Private bTerm As Boolean
+
+Private hShell32 As LongPtr
+
+Public Enum ucexpGetView
+    EB_GETCURVIEW_ISHELLVIEW = 1
+    EB_GETCURVIEW_ISHELLVIEW2
+    EB_GETCURVIEW_ISHELLVIEW3
+    EB_GETCURVIEW_IFOLDERVIEW
+    EB_GETCURVIEW_IFOLDERVIEW2
+    EB_GETCURVIEW_ISHELLFOLDER
+    EB_GETCURVIEW_ISHELLFOLDER2
+    EB_GETCURVIEW_ISHELLBROWSER
+    EB_GETCURVIEW_ISHELLITEM
+    EB_GETCURVIEW_ISHELLITEM2
+End Enum
+
+Private mFiltered As Boolean
+
+Private mNavOnce As Boolean
+Private Const mDefNavOnce As Boolean = False
+
+Private mShowFrames As Boolean
+Private Const mDefShowFrames As Boolean = True
+
+Private mAlwaysNav As Boolean
+Private Const mDefAlwaysNav As Boolean = True
+
+Private mNoLog As Boolean
+Private Const mDefNoLog As Boolean = False
+
+Private mNoWrapper As Boolean
+Private Const mDefNoWrapper As Boolean = False
+
+Private mSharePoint As Boolean
+Private Const mDefSharePoint As Boolean = False
+
+Private mNoBorder As Boolean
+Private Const mDefNoBorder As Boolean = False
+
+Private mNoPersist As Boolean
+Private Const mDefNoPersist As Boolean = False
+
+Private mNoSelVb As Boolean
+Private Const mDefNoSelVb As Boolean = True
+
+Private mStartPath As String
+Private Const mDefStartPath = "%USERPROFILE%"
+
+Public Enum ucExpViewMode
+     VIEWMODE_AUTO = -1
+    VIEWMODE_ICON = 1
+    VIEWMODE_SMALLICON = 2
+    VIEWMODE_LIST = 3
+    VIEWMODE_DETAILS = 4
+    VIEWMODE_THUMBNAIL = 5
+    VIEWMODE_TILE = 6
+    VIEWMODE_THUMBSTRIP = 7
+    VIEWMODE_CONTENT = 8
+End Enum
+Private mDefView As ucExpViewMode
+Private Const mDefDefView As Long = VIEWMODE_AUTO
+
+Private mKeepVM As Boolean
+Private Const mDefKeepVM As Boolean = False
+
+Private mFilter As String
+Private Const mDefFilter As String = "*"
+
+Private mFilterD As String
+Private Const mDefFilterD As String = "*"
+
+Private mSingleSel As Boolean
+Private Const mDefSingleSel As Boolean = False
+
+Public Enum ucExpPaneState
+    ExPS_DontCare
+    ExPS_DefaultDisabled
+    ExPS_DefaultEnabled
+    ExPS_ForceDisabled
+    ExPS_ForceEnabled
+    ExPS_InitialDisabled
+    ExPS_InitialEnabled
+End Enum
+Private mNavPane As ucExpPaneState
+Private Const mDefNavPane As Long = ExPS_InitialEnabled
+
+Private mDetailsPane As ucExpPaneState
+Private Const mDefDetailsPane As Long = ExPS_DefaultEnabled
+
+Private mPvwPane As ucExpPaneState
+Private Const mDefPvwPane As Long = ExPS_InitialDisabled
+
+Private mCmdPane As ucExpPaneState
+Private Const mDefCmdPane As Long = ExPS_DefaultEnabled
+
+Private mOrgPane As ucExpPaneState
+Private Const mDefOrgPane As Long = ExPS_DefaultEnabled
+
+Private mViewPane As ucExpPaneState
+Private Const mDefViewPane As Long = ExPS_DefaultEnabled
+
+Private mQueryPane As ucExpPaneState
+Private Const mDefQueryPane As Long = ExPS_InitialDisabled
+
+Private mAdvQueryPane As ucExpPaneState
+Private Const mDefAdvQueryPane As Long = ExPS_InitialDisabled
+
+Private mStatusPane As ucExpPaneState
+Private Const mDefStatusPane As Long = ExPS_InitialDisabled
+
+Private mRibbonPane As ucExpPaneState
+Private Const mDefRibbonPane As Long = ExPS_InitialDisabled
+
+Private mCustET As String
+Private Const mDefCustET As String = ""
+
+Private mCheck As Boolean
+Private Const mDefCheck As Boolean = False
+
+Private dwAdvCookie As Long
+
+Public Event OnNavigationPending(ByVal pidlFolder As LongPtr, ByVal sParsingPath As String, ByVal psiItem As IShellItem)
+Public Event OnPreViewCreated(ByVal pshvw As IShellView)
+Public Event OnViewCreated(ByVal pshvw As IShellView)
+Public Event OnNavigationComplete(ByVal pidlFolder As LongPtr, ByVal sParsingPath As String, ByVal psiItem As IShellItem)
+Public Event OnNavigationFailed(ByVal pidlFolder As LongPtr, ByVal sParsingPath As String, ByVal psiItem As IShellItem)
+Public Event OnSelectionChange(ByVal nCurrentSelCount As Long, sParsingPaths() As String, ByVal ppsiaSelection As IShellItemArray)
+Public Event OnRename()
+Public Event OnStateChange(ByVal nCurrentCheckCount As Long, ByVal ppsiaChecked As IShellItemArray)
+Public Event OnBrowserSetFocus()
+Public Event OnBrowserKillFocus()
+Public Event zDebugMessage(sMsg As String, nLevel As Long)
+
+Private mCurOpt As FOLDERSETTINGS
+
+Private m_ScaleX As Single, m_ScaleY As Single
+
+Private Const dbg_PrintToImmediate As Boolean = True 'This control has very extensive debug information, you may not want
+                                                      'to see that in your IDE.
+Private Const dbg_IncludeDate As Boolean = True 'Prefix all Debug output with the date and time, [yyyy-mm-dd Hh:Mm:Ss]
+Private Const dbg_IncludeName As Boolean = True 'Include Ambient.Name
+Private Const dbg_dtFormat As String = "yyyy-mm-dd Hh:nn:Ss"
+Private Const dbg_RaiseEvent As Boolean = False 'Raise DebugMessage event
+Private Const dbg_MinLevel As Long = 0&   'Only log to immediate/file messages >= this level
+
+Private Sub DebugAppend(ByVal sMsg As String, Optional ilvl As Long = 0)
+If ilvl < dbg_MinLevel Then Exit Sub
+Dim sOut As String
+If dbg_IncludeDate Then sOut = "[" & Format$(Now, dbg_dtFormat) & "] "
+If dbg_IncludeName Then sOut = sOut & Ambient.DisplayName & ": "
+sOut = sOut & sMsg
+If dbg_PrintToImmediate Then Debug.Print sOut
+If dbg_RaiseEvent = True Then RaiseEvent zDebugMessage(sOut, ilvl)
+
+End Sub
+Private Function dbg_GUIDToString(tg As UUID, Optional bBrack As Boolean = True) As String
+'StringFromGUID2 never works, even "working" code from vbaccelerator AND MSDN
+dbg_GUIDToString = Right$("00000000" & Hex$(tg.Data1), 8) & "-" & Right$("0000" & Hex$(tg.Data2), 4) & "-" & Right$("0000" & Hex$(tg.Data3), 4) & _
+"-" & Right$("00" & Hex$(CLng(tg.Data4(0))), 2) & Right$("00" & Hex$(CLng(tg.Data4(1))), 2) & "-" & Right$("00" & Hex$(CLng(tg.Data4(2))), 2) & _
+Right$("00" & Hex$(CLng(tg.Data4(3))), 2) & Right$("00" & Hex$(CLng(tg.Data4(4))), 2) & Right$("00" & Hex$(CLng(tg.Data4(5))), 2) & _
+Right$("00" & Hex$(CLng(tg.Data4(6))), 2) & Right$("00" & Hex$(CLng(tg.Data4(7))), 2)
+If bBrack Then dbg_GUIDToString = "{" & dbg_GUIDToString & "}"
+End Function
+
+
+
+#Region "InterfaceImpls"
+Private Sub IObjectSafety_GetInterfaceSafetyOptions(riid As UUID, pdwSupportedOptions As Long, pdwEnabledOptions As Long) Implements IObjectSafety.GetInterfaceSafetyOptions
+Const INTERFACESAFE_FOR_UNTRUSTED_CALLER As Long = &H1, INTERFACESAFE_FOR_UNTRUSTED_DATA As Long = &H2
+pdwSupportedOptions = INTERFACESAFE_FOR_UNTRUSTED_CALLER Or INTERFACESAFE_FOR_UNTRUSTED_DATA
+pdwEnabledOptions = INTERFACESAFE_FOR_UNTRUSTED_CALLER Or INTERFACESAFE_FOR_UNTRUSTED_DATA
+End Sub
+Private Sub IObjectSafety_SetInterfaceSafetyOptions(riid As UUID, ByVal dwOptionSetMask As Long, ByVal dwEnabledOptions As Long) Implements IObjectSafety.SetInterfaceSafetyOptions
+End Sub
+
+Private Sub IServiceProvider_QueryService(guidService As UUID, riid As UUID, ppvObject As LongPtr) Implements IServiceProvider.QueryService
+    If bTerm Then
+       Err.ReturnHResult = E_NOINTERFACE
+       Exit Sub
+    End If
+    
+    Dim pUnk As IUnknownUnrestricted
+    
+    If IsEqualGUID(guidService, SID_ExplorerPaneVisibility) Then
+        Set pUnk = Me
+        Err.ReturnHResult = pUnk.QueryInterface(IID_IExplorerPaneVisibility, ppvObject)
+        Exit Sub
+    ElseIf IsEqualGUID(guidService, SID_SExplorerBrowserFrame) Then
+        'DebugAppend "SID_SExplorerBrowserFrame for " & dbg_GUIDToString(riid)
+        Set pUnk = Me
+        Err.ReturnHResult = pUnk.QueryInterface(riid, ppvObject)
+        Exit Sub
+        'The above code will automatically implement all 3 of the below. If you
+        'only wanted to implement 1 or 1/2, you could comment out the above and
+        'use the following individual query responses:
+    '     If IsEqualGUID(riid, IID_ICommDlgBrowser3) Then
+    '         Set pUnk = Me
+    '         Err.ReturnHResult = pUnk.QueryInterface(IID_ICommDlgBrowser3, ppvObject)
+    '         Exit Sub
+    '     ElseIf IsEqualGUID(riid, IID_ICommDlgBrowser2) Then
+    '         Set pUnk = Me
+    '         Err.ReturnHResult = pUnk.QueryInterface(IID_ICommDlgBrowser2, ppvObject)
+    '     ElseIf IsEqualGUID(riid, IID_ICommDlgBrowser) Then
+    '         Set pUnk = Me
+    '         Err.ReturnHResult = pUnk.QueryInterface(IID_ICommDlgBrowser, ppvObject)
+    '         Exit Sub
+    '     End If
+    End If
+    
+    Err.ReturnHResult = E_NOINTERFACE 'fun fact, we get queried for *so many* interesting looking interfaces
+                                      'that are completely undocumented.
+End Sub
+
+
+Private Sub IExplorerBrowserEvents_OnNavigationPending(ByVal pidlFolder As LongPtr) Implements IExplorerBrowserEvents.OnNavigationPending
+    Dim pSI As IShellItem
+    Dim lpPath As LongPtr, sPath As String
+    
+    SHCreateItemFromIDList pidlFolder, IID_IShellItem, pSI
+    If pSI IsNot Nothing Then
+        pSI.GetDisplayName SIGDN_DESKTOPABSOLUTEPARSING, lpPath
+        sPath = LPWSTRtoStr(lpPath)
+    End If
+    
+    RaiseEvent OnNavigationPending(pidlFolder, sPath, pSI)
+End Sub
+
+Private Sub IExplorerBrowserEvents_OnViewCreated(ByVal psv As IShellView) Implements IExplorerBrowserEvents.OnViewCreated
+    Set svCurView = Nothing
+    Set svCurView = psv
+    RaiseEvent OnViewCreated(psv)
+    psv.GetCurrentInfo mCurOpt
+    If mKeepVM Then
+        If mCurOpt.ViewMode <> mDefView Then
+            mCurOpt.ViewMode = mDefView
+            pExp.SetFolderSettings mCurOpt
+        End If
+    End If
+End Sub
+
+Private Sub IExplorerBrowserEvents_OnNavigationComplete(ByVal pidlFolder As LongPtr) Implements IExplorerBrowserEvents.OnNavigationComplete
+    Dim lpPath As LongPtr, sPath As String
+    Set siCurPath = Nothing
+    SHCreateItemFromIDList pidlFolder, IID_IShellItem, siCurPath
+    If siCurPath IsNot Nothing Then
+        siCurPath.GetDisplayName SIGDN_DESKTOPABSOLUTEPARSING, lpPath
+        sPath = LPWSTRtoStr(lpPath)
+    End If
+    
+    RaiseEvent OnNavigationComplete(pidlFolder, sPath, siCurPath)
+End Sub
+
+Private Sub IExplorerBrowserEvents_OnNavigationFailed(ByVal pidlFolder As LongPtr) Implements IExplorerBrowserEvents.OnNavigationFailed
+    Dim pSI As IShellItem
+    Dim lpPath As LongPtr, sPath As String
+    
+    SHCreateItemFromIDList pidlFolder, IID_IShellItem, pSI
+    If pSI IsNot Nothing Then
+        pSI.GetDisplayName SIGDN_DESKTOPABSOLUTEPARSING, lpPath
+        sPath = LPWSTRtoStr(lpPath)
+    End If
+    
+    RaiseEvent OnNavigationFailed(pidlFolder, sPath, pSI)
+End Sub
+
+
+' Private Sub IFolderFilter_ShouldShow(ByVal psf As IShellFolder, ByVal pidlFolder As LongPtr, ByVal pidlItem As LongPtr) Implements IFolderFilter.ShouldShow
+' Dim psi As IShellItem
+' Dim lpName As LongPtr, sName As String
+' Dim dwAtr As SFGAO_Flags
+' On Error GoTo e0
+
+' SHCreateItemWithParent 0&, psf, pidlItem, IID_IShellItem, psi
+
+' psi.GetDisplayName SIGDN_DESKTOPABSOLUTEEDITING, lpName
+' sName = LPWSTRtoStr(lpName)
+' psi.GetAttributes SFGAO_FOLDER Or SFGAO_STREAM, dwAtr
+' If ((dwAtr And SFGAO_FOLDER) = SFGAO_FOLDER) And ((dwAtr And SFGAO_STREAM) = 0) Then
+'     'True folder; for this purpose we don't want to count .zip/.cab as folders.
+'     If PathMatchSpec(sName, mFilterD) Then
+'         Err.ReturnHResult = S_OK
+'     Else
+'         Err.ReturnHResult = S_FALSE
+'     End If
+' Else
+'     If PathMatchSpec(sName, mFilter) Then
+'         Err.ReturnHResult = S_OK
+'     Else
+'         Err.ReturnHResult = S_FALSE
+'     End If
+' End If
+
+' Exit Sub
+' e0:
+' DebugAppend CurrentComponentName & "::" & CurrentProcedureName & "->Error 0x" & Hex$(Err.Number) & ", " & Err.Description
+' End Sub
+
+' Private Sub IFolderFilter_GetEnumFlags(ByVal psf As IShellFolder, ByVal pidlFolder As LongPtr, phwnd As LongPtr, pgrfFlags As Long) Implements IFolderFilter.GetEnumFlags
+' Err.ReturnHResult = E_NOTIMPL
+' End Sub
+
+Private Sub IExplorerPaneVisibility_GetPaneState(ep As UUID, peps As EXPLORERPANESTATE) Implements IExplorerPaneVisibility.GetPaneState
+    If mShowFrames = False Then
+        peps = EPS_DEFAULT_OFF Or EPS_FORCE
+        Exit Sub
+    End If
+    Dim nVal As ucExpPaneState
+    If IsEqualGUID(ep, EP_NavPane) Then
+        nVal = mNavPane
+    ElseIf IsEqualGUID(ep, EP_PreviewPane) Then
+        DebugAppend "Got preview pane query, set to " & mPvwPane
+        nVal = mPvwPane
+    ElseIf IsEqualGUID(ep, EP_StatusBar) Then
+        nVal = mStatusPane
+    ElseIf IsEqualGUID(ep, EP_Commands) Then
+        nVal = mCmdPane
+    ElseIf IsEqualGUID(ep, EP_Commands_Organize) Then
+        nVal = mOrgPane
+    ElseIf IsEqualGUID(ep, EP_Commands_View) Then
+        nVal = mViewPane
+    ElseIf IsEqualGUID(ep, EP_QueryPane) Then
+        nVal = mQueryPane
+    ElseIf IsEqualGUID(ep, EP_AdvQueryPane) Then
+        nVal = mAdvQueryPane
+    ElseIf IsEqualGUID(ep, EP_Ribbon) Then
+        nVal = mRibbonPane
+    End If
+    
+    Select Case nVal
+        Case ExPS_DontCare: peps = EPS_DONTCARE
+        Case ExPS_DefaultDisabled: peps = EPS_DEFAULT_OFF
+        Case ExPS_DefaultEnabled: peps = EPS_DEFAULT_ON
+        Case ExPS_ForceDisabled: peps = EPS_DEFAULT_OFF Or EPS_FORCE
+        Case ExPS_ForceEnabled: peps = EPS_DEFAULT_ON Or EPS_FORCE
+        Case ExPS_InitialDisabled: peps = EPS_DEFAULT_OFF Or EPS_INITIALSTATE
+        Case ExPS_InitialEnabled: peps = EPS_DEFAULT_ON Or EPS_INITIALSTATE
+    End Select
+End Sub
+
+Private Sub ICommDlgBrowser_OnDefaultCommand(ByVal ppshv As IShellView) Implements ICommDlgBrowser3.OnDefaultCommand
+    Err.ReturnHResult = E_NOTIMPL
+End Sub
+
+Private Sub ICommDlgBrowser_IncludeObject(ByVal ppshv As IShellView, ByVal pidl As LongPtr) Implements ICommDlgBrowser3.IncludeObject
+'This shouldn't be called when an IFolderFilter is in place.
+'DebugAppend CurrentProcedureName & "::Entry, master=" & mFiltered
+If mFiltered = False Then
+    Err.ReturnHResult = S_OK
+    Exit Sub
+End If
+
+Dim psi As IShellItem
+Dim lpName As LongPtr, sName As String
+Dim dwAtr As SFGAOF
+On Error GoTo e0
+
+SHCreateItemFromIDList pidl, IID_IShellItem, psi
+
+psi.GetDisplayName SIGDN_DESKTOPABSOLUTEEDITING, lpName
+sName = LPWSTRtoStr(lpName)
+psi.GetAttributes SFGAO_FOLDER Or SFGAO_STREAM, dwAtr
+If ((dwAtr And SFGAO_FOLDER) = SFGAO_FOLDER) And ((dwAtr And SFGAO_STREAM) = 0) Then
+    'True folder; for this purpose we don't want to count .zip/.cab as folders.
+    If PathMatchSpec(sName, mFilterD) Then
+        Err.ReturnHResult = S_OK
+    Else
+        Err.ReturnHResult = S_FALSE
+    End If
+Else
+    If PathMatchSpec(sName, mFilter) Then
+        Err.ReturnHResult = S_OK
+    Else
+        Err.ReturnHResult = S_FALSE
+    End If
+End If
+
+Exit Sub
+e0:
+DebugAppend CurrentComponentName & "::" & CurrentProcedureName & "->Error 0x" & Hex$(Err.Number) & ", " & Err.Description
+End Sub
+
+Private Sub ICommDlgBrowser_OnStateChange(ByVal ppshv As IShellView, ByVal uChange As Long) Implements ICommDlgBrowser3.OnStateChange
+    Dim nCt As Long
+    Dim i As Long, j As Long
+    Dim pSIA As IShellItemArray
+    Dim pEnum As IEnumShellItems
+    Dim pFV As IFolderView
+    Dim siChild As IShellItem
+    Dim pc As Long
+    Dim lp As LongPtr
+    Dim sSel() As String
+    If uChange = CDBOSC_SELCHANGE Then
+        Set pFV = ppshv
+        If pFV IsNot Nothing Then
+            pFV.ItemCount SVGIO_SELECTION, nCt
+            If nCt Then
+                ppshv.GetItemObject SVGIO_SELECTION, IID_IShellItemArray, pSIA
+                If pSIA IsNot Nothing Then
+                    pSIA.EnumItems pEnum
+                    Do While pEnum.Next(1, siChild, pc) = S_OK
+                        siChild.GetDisplayName SIGDN_DESKTOPABSOLUTEPARSING, lp
+                        ReDim Preserve sSel(j)
+                        sSel(j) = LPWSTRtoStr(lp)
+                        j += 1
+                        Set siChild = Nothing
+                    Loop
+                    RaiseEvent OnSelectionChange(nCt, sSel, pSIA)
+                    Exit Sub
+                End If
+            Else
+                RaiseEvent OnSelectionChange(0, Array(), Nothing)
+            End If
+        End If
+    ElseIf uChange = CDBOSC_STATECHANGE Then
+        Set pFV = ppshv
+        If pFV IsNot Nothing Then
+            pFV.ItemCount SVGIO_CHECKED, nCt
+            If nCt Then
+                ppshv.GetItemObject SVGIO_CHECKED, IID_IShellItemArray, pSIA
+                If pSIA IsNot Nothing Then
+                    Do While pEnum.Next(1, siChild, pc) = S_OK
+                        siChild.GetDisplayName SIGDN_DESKTOPABSOLUTEPARSING, lp
+                        ReDim Preserve sSel(j)
+                        sSel(j) = LPWSTRtoStr(lp)
+                        j += 1
+                        Set siChild = Nothing
+                    Loop
+                    RaiseEvent OnSelectionChange(nCt, sSel, pSIA)
+                    Exit Sub
+                End If
+            Else
+                RaiseEvent OnSelectionChange(0, Array(), Nothing)
+            End If
+        End If
+    ElseIf uChange = CDBOSC_RENAME Then
+        RaiseEvent OnRename()
+    ElseIf uChange = CDBOSC_SETFOCUS Then
+        RaiseEvent OnBrowserSetFocus()
+    ElseIf uChange = CDBOSC_KILLFOCUS Then
+        RaiseEvent OnBrowserKillFocus()
+    End If
+End Sub
+
+Private Sub ICommDlgBrowser2_Notify(ByVal ppshv As IShellView, ByVal dwNotifyType As CB2DN_TYPES) Implements ICommDlgBrowser3.Notify
+    
+End Sub
+
+Private Sub ICommDlgBrowser2_GetDefaultMenuText(ByVal ppshv As IShellView, ByVal pszText As LongPtr, ByVal cchMax As Long) Implements ICommDlgBrowser3.GetDefaultMenuText
+Err.ReturnHResult = S_FALSE
+End Sub
+
+Private Sub ICommDlgBrowser2_GetViewFlags(pdwFlags As CDB2GVF_FLAGS) Implements ICommDlgBrowser3.GetViewFlags
+    If mShowFrames Then
+        pdwFlags = pdwFlags Or CDB2GVF_ALLOWPREVIEWPANE
+    Else
+        pdwFlags = pdwFlags And Not CDB2GVF_ALLOWPREVIEWPANE
+    End If
+    If mNoSelVb = False Then
+        pdwFlags = pdwFlags Or CDB2GVF_NOSELECTVERB
+    Else
+        pdwFlags = pdwFlags And Not CDB2GVF_NOSELECTVERB
+    End If
+End Sub
+
+Private Sub ICommDlgBrowser3_OnColumnClicked(ByVal ppshv As IShellView, ByVal iColumn As Long) Implements ICommDlgBrowser3.OnColumnClicked
+    
+End Sub
+
+Private Sub ICommDlgBrowser3_GetCurrentFilter(ByVal pszFileSpec As LongPtr, ByVal cchFileSpec As Long) Implements ICommDlgBrowser3.GetCurrentFilter
+    DebugAppend "ICommDlgBrowser3_GetCurrentFilter cch=" & cchFileSpec & ",ptr=" & pszFileSpec
+End Sub
+
+Private Sub ICommDlgBrowser3_OnPreViewCreated(ByVal ppshv As IShellView) Implements ICommDlgBrowser3.OnPreViewCreated
+    RaiseEvent OnPreViewCreated(ppshv)
+End Sub
+#End Region
+
+#Region "Properties"
+
+Public Property Get Checkboxes() As Boolean: Checkboxes = mCheck: End Property
+[Description("Select items by checkboxes in the browser.")]
+Public Property Let Checkboxes(fEnable As Boolean)
+If fEnable <> mCheck Then
+    mCheck = fEnable
+    If pExp IsNot Nothing Then
+        Dim tCurOpts As FOLDERSETTINGS
+        Dim pSV As IShellView
+        pExp.GetCurrentView IID_IShellView, pSV
+        If pSV IsNot Nothing Then
+            pSV.GetCurrentInfo tCurOpts
+            If mCheck Then
+                tCurOpts.fFlags = tCurOpts.fFlags Or FWF_AUTOCHECKSELECT Or FWF_CHECKSELECT
+            Else
+                tCurOpts.fFlags = tCurOpts.fFlags And Not FWF_AUTOCHECKSELECT
+                tCurOpts.fFlags = tCurOpts.fFlags And Not FWF_CHECKSELECT
+            End If
+            pExp.SetFolderSettings tCurOpts
+            pSV.Refresh()
+        End If
+    End If
+End If
+End Property
+
+Public Property Get UseSelectVerb() As Boolean: UseSelectVerb = mNoSelVb: End Property
+[Description("Use Select as the default verb rather than Open or others.")]
+Public Property Let UseSelectVerb(bValue As Boolean)
+    mNoSelVb = bValue
+End Property
+
+Public Property Get CustomEmptyText() As String: CustomEmptyText = mCustET: End Property
+[Description("Specify custom text to display when a folder is empty. Leave blank to use the text supplied by Windows.")]
+Public Property Let CustomEmptyText(sText As String)
+If sText <> mCustET Then
+    mCustET = sText
+    If pExp IsNot Nothing Then
+        pExp.SetEmptyText mCustET
+    End If
+End If
+End Property
+
+
+Public Property Get NavigateOnce() As Boolean: NavigateOnce = mNavOnce: End Property
+[Description("Do not allow further navigation after the initial one. Cannot be set at runtime.")]
+Public Property Let NavigateOnce(fVal As Boolean)
+    If fVal <> mNavOnce Then
+        mNavOnce = fVal
+    End If
+End Property
+
+Public Property Get ShowFrames() As Boolean: ShowFrames = mShowFrames: End Property
+[Description("Enable ability to show the navigation tree frame, preview frame, and others. You can control each of these manually.")]
+Public Property Let ShowFrames(fShow As Boolean)
+    If fShow <> mShowFrames Then
+        mShowFrames = fShow
+        If pExp IsNot Nothing Then
+            Dim dwOpt As EXPLORER_BROWSER_OPTIONS
+            pExp.GetOptions dwOpt
+            If mShowFrames Then
+                dwOpt = dwOpt Or EBO_SHOWFRAMES
+            Else
+                dwOpt = dwOpt And Not EBO_SHOWFRAMES
+            End If
+            pExp.SetOptions dwOpt
+        End If
+    End If
+End Property
+
+Public Property Get AlwaysNavigate() As Boolean: AlwaysNavigate = mAlwaysNav: End Property
+[Description("Always navigate, even if the current and destination folders are the same.")]
+Public Property Let AlwaysNavigate(fEnabled As Boolean)
+    If fEnabled <> mAlwaysNav Then
+        mAlwaysNav = fEnabled
+        If pExp IsNot Nothing Then
+            Dim dwOpt As EXPLORER_BROWSER_OPTIONS
+            pExp.GetOptions dwOpt
+            If mAlwaysNav Then
+                dwOpt = dwOpt Or EBO_ALWAYSNAVIGATE
+            Else
+                dwOpt = dwOpt And Not EBO_ALWAYSNAVIGATE
+            End If
+            pExp.SetOptions dwOpt
+        End If
+    End If
+End Property
+
+Public Property Get NoTravelLog() As Boolean: NoTravelLog = mNoLog: End Property
+[Description("Do not update the travel log when navigating.")]
+Public Property Let NoTravelLog(fEnabled As Boolean)
+    If fEnabled <> mNoLog Then
+        mNoLog = fEnabled
+        If pExp IsNot Nothing Then
+            Dim dwOpt As EXPLORER_BROWSER_OPTIONS
+            pExp.GetOptions dwOpt
+            If mNoLog Then
+                dwOpt = dwOpt Or EBO_NOTRAVELLOG
+            Else
+                dwOpt = dwOpt And Not EBO_NOTRAVELLOG
+            End If
+            pExp.SetOptions dwOpt
+        End If
+    End If
+End Property
+
+Public Property Get NoWrapperWindow() As Boolean: NoWrapperWindow = mNoWrapper: End Property
+[Description("Create the browser directly on the UserControl. Cannot be set at runtime.")]
+Public Property Let NoWrapperWindow(fVal As Boolean)
+    If Ambient.UserMode Then Exit Property
+    mNoWrapper = fVal
+End Property
+
+Public Property Get HTMLSharepointView() As Boolean: HTMLSharepointView = mSharePoint: End Property
+[Description("Show Webview for Sharepoint sites.")]
+Public Property Let HTMLSharepointView(fEnabled As Boolean)
+    If fEnabled <> mSharePoint Then
+        mSharePoint = fEnabled
+        If pExp IsNot Nothing Then
+            Dim dwOpt As EXPLORER_BROWSER_OPTIONS
+            pExp.GetOptions dwOpt
+            If mSharePoint Then
+                dwOpt = dwOpt Or EBO_HTMLSHAREPOINTVIEW
+            Else
+                dwOpt = dwOpt And Not EBO_HTMLSHAREPOINTVIEW
+            End If
+            pExp.SetOptions dwOpt
+        End If
+    End If
+End Property
+
+Public Property Get NoBorder() As Boolean: NoBorder = mNoBorder: End Property
+[Description("No border between the browser and control.")]
+Public Property Let NoBorder(fEnabled As Boolean)
+    If fEnabled <> mNoBorder Then
+        mNoBorder = fEnabled
+        If pExp IsNot Nothing Then
+            Dim dwOpt As EXPLORER_BROWSER_OPTIONS
+            pExp.GetOptions dwOpt
+            If mNoBorder Then
+                dwOpt = dwOpt Or EBO_NOBORDER
+            Else
+                dwOpt = dwOpt And Not EBO_NOBORDER
+            End If
+            pExp.SetOptions dwOpt
+        End If
+    End If
+End Property
+
+Public Property Get NoPersistView() As Boolean: NoPersistView = mNoPersist: End Property
+[Description("Do not persist view state.")]
+Public Property Let NoPersistView(fEnabled As Boolean)
+    If fEnabled <> mNoPersist Then
+        mNoPersist = fEnabled
+        If pExp IsNot Nothing Then
+            Dim dwOpt As EXPLORER_BROWSER_OPTIONS
+            pExp.GetOptions dwOpt
+            If mNoPersist Then
+                dwOpt = dwOpt Or EBO_NOPERSISTVIEWSTATE
+            Else
+                dwOpt = dwOpt And Not EBO_NOPERSISTVIEWSTATE
+            End If
+            pExp.SetOptions dwOpt
+        End If
+    End If
+End Property
+
+Public Property Get FilterFiles() As String: FilterFiles = mFilter: End Property
+[Description("Filter what files are shown in the browser.")]
+Public Property Let FilterFiles(sFilter As String)
+If mFilter <> sFilter Then
+    mFilter = sFilter
+    If ((mFilter = "*") OrElse (mFilter = "*.*") OrElse (mFilter = "")) AndAlso _
+        ((mFilterD = "*") OrElse (mFilterD = "*.*") OrElse (mFilterD = "")) Then
+        'Master filter toggle-- if no filtering enabled, shut down filter procedure with a 
+        'simple boolean rather than compare ever file,
+        mFiltered = True
+    Else
+        mFiltered = False
+    End If
+    If pExp IsNot Nothing Then
+        Dim pSV As IShellView
+        pExp.GetCurrentView IID_IShellView, pSV
+        If pSV IsNot Nothing Then
+            pSV.Refresh()
+        End If
+    End If
+End If
+End Property
+
+Public Property Get FilterFolders() As String: FilterFolders = mFilterD: End Property
+[Description("Filter what folders are shown in the browser.")]
+Public Property Let FilterFolders(sFilter As String)
+If mFilterD <> sFilter Then
+    mFilterD = sFilter
+    If ((mFilter = "*") OrElse (mFilter = "*.*") OrElse (mFilter = "")) AndAlso _
+        ((mFilterD = "*") OrElse (mFilterD = "*.*") OrElse (mFilterD = "")) Then
+        'Master filter toggle-- if no filtering enabled, shut down filter procedure with a 
+        'simple boolean rather than compare ever file,
+        mFiltered = True
+    Else
+        mFiltered = False
+    End If
+    If pExp IsNot Nothing Then
+        Dim pSV As IShellView
+        pExp.GetCurrentView IID_IShellView, pSV
+        If pSV IsNot Nothing Then
+            pSV.Refresh()
+        End If
+    End If
+End If
+End Property
+
+Public Property Get StartPath() As String
+    StartPath = mStartPath
+End Property
+[Description("The initial path to set on startup. Environmental variables are supported.")]
+Public Property Let StartPath(sPath As String)
+    mStartPath = sPath
+End Property
+
+Public Property Get ViewModeDefault() As ucExpViewMode: ViewModeDefault = mDefView: End Property
+[Description("The view mode to default to, and enforce if ViewModeForce is enabled.")]
+Public Property Let ViewModeDefault(nView As ucExpViewMode)
+If (nView <> mDefView) And (mKeepVM = True) Then
+    mDefView = nView
+    If pExp IsNot Nothing Then
+        Dim tCurOpts As FOLDERSETTINGS
+        Dim pSV As IShellView
+        pExp.GetCurrentView IID_IShellView, pSV
+        If pSV IsNot Nothing Then
+            pSV.GetCurrentInfo tCurOpts
+            tCurOpts.ViewMode = nView
+            pExp.SetFolderSettings tCurOpts
+            pSV.Refresh()
+        End If
+    End If
+End If
+End Property
+
+Public Property Get ViewModeForce() As Boolean: ViewModeForce = mKeepVM: End Property
+[Description("Use the view set by ViewModeDefault even if the folder has a different default set in Windows.")]
+Public Property Let ViewModeForce(fEnable As Boolean)
+If fEnable <> mKeepVM Then
+    mKeepVM = fEnable
+    If mKeepVM Then
+        If pExp IsNot Nothing Then
+            Dim tCurOpts As FOLDERSETTINGS
+            Dim pSV As IShellView
+            pExp.GetCurrentView IID_IShellView, pSV
+            If pSV IsNot Nothing Then
+                pSV.GetCurrentInfo tCurOpts
+                If tCurOpts.ViewMode <> mDefView Then
+                    tCurOpts.ViewMode = mDefView
+                    pExp.SetFolderSettings tCurOpts
+                    pSV.Refresh()
+                End If
+            End If
+        End If
+    End If
+End If
+
+End Property
+
+Public Property Get SingleSelect() As Boolean: SingleSelect = mSingleSel: End Property
+[Description("Whether user can select only one item at a time.")]
+Public Property Let SingleSelect(fEnable As Boolean)
+If fEnable <> mSingleSel Then
+    mSingleSel = fEnable
+    If pExp IsNot Nothing Then
+        Dim tCurOpts As FOLDERSETTINGS
+        Dim pSV As IShellView
+        pExp.GetCurrentView IID_IShellView, pSV
+        If pSV IsNot Nothing Then
+            pSV.GetCurrentInfo tCurOpts
+            If mSingleSel Then
+                tCurOpts.fFlags = tCurOpts.fFlags Or FWF_SINGLESEL
+            Else
+                tCurOpts.fFlags = tCurOpts.fFlags And Not FWF_SINGLESEL
+            End If
+            pExp.SetFolderSettings tCurOpts
+            pSV.Refresh()
+        End If
+    End If
+End If
+End Property
+
+
+
+
+Public Property Get ShowNavigationPane() As ucExpPaneState: ShowNavigationPane = mNavPane: End Property
+[Description("State of the navigation frame (folder tree")]
+Public Property Let ShowNavigationPane(nState As ucExpPaneState): mNavPane = nState: End Property
+
+Public Property Get ShowPreviewPane() As ucExpPaneState: ShowPreviewPane = mPvwPane: End Property
+[Description("State of the preview frame.")]
+Public Property Let ShowPreviewPane(nState As ucExpPaneState): mPvwPane = nState: End Property
+
+Public Property Get ShowDetailsPane() As ucExpPaneState: ShowDetailsPane = mDetailsPane: End Property
+[Description("State of the Details frame.")]
+Public Property Let ShowDetailsPane(nState As ucExpPaneState): mDetailsPane = nState: End Property
+
+Public Property Get ShowOrganizeButton() As ucExpPaneState: ShowOrganizeButton = mOrgPane: End Property
+[Description("State of the Organize button within the Command frame.")]
+Public Property Let ShowOrganizeButton(nState As ucExpPaneState): mOrgPane = nState: End Property
+
+Public Property Get ShowViewButton() As ucExpPaneState: ShowViewButton = mViewPane: End Property
+[Description("State of the Organize button within the Command frame.")]
+Public Property Let ShowViewButton(nState As ucExpPaneState): mViewPane = nState: End Property
+
+Public Property Get ShowCommandPane() As ucExpPaneState: ShowCommandPane = mCmdPane: End Property
+[Description("State of the Command pane typically containing e.g. Organize and View")]
+Public Property Let ShowCommandPane(nState As ucExpPaneState): mCmdPane = nState: End Property
+
+Public Property Get ShowStatusPane() As ucExpPaneState: ShowStatusPane = mStatusPane: End Property
+[Description("State of the Status frame that shows certain progress (Windows 8+ only).")]
+Public Property Let ShowStatusPane(nState As ucExpPaneState): mStatusPane = nState: End Property
+
+Public Property Get ShowRibbonPane() As ucExpPaneState: ShowRibbonPane = mRibbonPane: End Property
+[Description("State of the Status frame that shows certain progress (Windows 8+ only).")]
+Public Property Let ShowRibbonPane(nState As ucExpPaneState): mRibbonPane = nState: End Property
+
+Public Property Get ShowQueryPane() As ucExpPaneState: ShowQueryPane = mQueryPane: End Property
+[Description("State of the Quick Filter buttons to aid in search.")]
+Public Property Let ShowQueryPane(nState As ucExpPaneState): mQueryPane = nState: End Property
+
+Public Property Get ShowAdvancedQueryPane() As ucExpPaneState: ShowAdvancedQueryPane = mAdvQueryPane: End Property
+[Description("State of the additional filters and options to aid in search.")]
+Public Property Let ShowAdvancedQueryPane(nState As ucExpPaneState): mAdvQueryPane = nState: End Property
+
+#End Region
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag) Handles UserControl.ReadProperties
+mFilter = PropBag.ReadProperty("FilterFiles", mDefFilter)
+mFilterD = PropBag.ReadProperty("FilterFolders", mDefFilterD)
+mNoPersist = PropBag.ReadProperty("NoPersistView", mDefNoPersist)
+mNoBorder = PropBag.ReadProperty("InternalBorder", Not mDefNoBorder)
+mNoWrapper = PropBag.ReadProperty("WrapperWindow", Not mDefNoWrapper)
+mSharePoint = PropBag.ReadProperty("HTMLSharepointView", mDefSharePoint)
+mDefView = PropBag.ReadProperty("ViewModeDefault", mDefDefView)
+mKeepVM = PropBag.ReadProperty("ViewModeForce", mDefKeepVM)
+mNoLog = PropBag.ReadProperty("NoTravelLog", mDefNoLog)
+mNavOnce = PropBag.ReadProperty("NavigateOnce", mDefNavOnce)
+mShowFrames = PropBag.ReadProperty("ShowFrames", mDefShowFrames)
+mAlwaysNav = PropBag.ReadProperty("AlwaysNavigate", mDefAlwaysNav)
+mSingleSel = PropBag.ReadProperty("SingleSelect", mDefSingleSel)
+mNavPane = PropBag.ReadProperty("ShowNavigationPane", mDefNavPane)
+mPvwPane = PropBag.ReadProperty("ShowPreviewPane", mDefPvwPane)
+mDetailsPane = PropBag.ReadProperty("ShowDetailsPane", mDefDetailsPane)
+mOrgPane = PropBag.ReadProperty("ShowOrganizeButton", mDefOrgPane)
+mViewPane = PropBag.ReadProperty("ShowViewButton", mDefViewPane)
+mCmdPane = PropBag.ReadProperty("ShowCommandPane", mDefCmdPane)
+mStatusPane = PropBag.ReadProperty("ShowStatusPane", mDefStatusPane)
+mQueryPane = PropBag.ReadProperty("ShowQueryPane", mDefQueryPane)
+mAdvQueryPane = PropBag.ReadProperty("ShowAdvancedQueryPane", mDefAdvQueryPane)
+mRibbonPane = PropBag.ReadProperty("ShowRibbonPane", mDefRibbonPane)
+mCustET = PropBag.ReadProperty("CustomEmptyText", mDefCustET)
+mCheck = PropBag.ReadProperty("Checkboxes", mDefCheck)
+mNoSelVb = PropBag.ReadProperty("UseSelectVerb", mDefNoSelVb)
+pvCreate
+End Sub
+
+
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag) Handles UserControl.WriteProperties
+PropBag.WriteProperty "FilterFiles", mFilter, mDefFilter
+PropBag.WriteProperty "FilterFolders", mFilterD, mDefFilterD
+PropBag.WriteProperty "NoPersistView", mNoPersist, mDefNoPersist
+PropBag.WriteProperty "InternalBorder", Not mNoBorder, Not mDefNoBorder
+PropBag.WriteProperty "WrapperWindow", Not mNoWrapper, Not mDefNoWrapper
+PropBag.WriteProperty "HTMLSharepointView", mSharePoint, mDefSharePoint
+PropBag.WriteProperty "ViewModeDefault", mDefView, mDefDefView
+PropBag.WriteProperty "ViewModeForce", mKeepVM, mDefKeepVM
+PropBag.WriteProperty "NoTravelLog", mNoLog, mDefNoLog
+PropBag.WriteProperty "NavigateOnce", mNavOnce, mDefNavOnce
+PropBag.WriteProperty "ShowFrames", mShowFrames, mDefShowFrames
+PropBag.WriteProperty "AlwaysNavigate", mAlwaysNav, mDefAlwaysNav
+PropBag.WriteProperty "SingleSelect", mSingleSel, mDefSingleSel
+PropBag.WriteProperty "ShowNavigationPane", mNavPane, mDefNavPane
+PropBag.WriteProperty "ShowPreviewPane", mPvwPane, mDefPvwPane
+PropBag.WriteProperty "ShowDetailsPane", mDetailsPane, mDefDetailsPane
+PropBag.WriteProperty "ShowOrganizeButton", mOrgPane, mDefOrgPane
+PropBag.WriteProperty "ShowViewButton", mViewPane, mDefViewPane
+PropBag.WriteProperty "ShowCommandPane", mCmdPane, mDefCmdPane
+PropBag.WriteProperty "ShowStatusPane", mStatusPane, mDefStatusPane
+PropBag.WriteProperty "ShowQueryPane", mQueryPane, mDefQueryPane
+PropBag.WriteProperty "ShowAdvancedQueryPane", mAdvQueryPane, mDefAdvQueryPane
+PropBag.WriteProperty "ShowRibbonPane", mRibbonPane, mDefRibbonPane
+PropBag.WriteProperty "CustomEmptyText", mCustET, mDefCustET
+PropBag.WriteProperty "Checkboxes", mCheck, mDefCheck
+PropBag.WriteProperty "UseSelectVerb", mNoSelVb, mDefNoSelVb
+End Sub
+
+Private Sub UserControl_InitProperties() Handles UserControl.InitProperties
+mFilter = mDefFilter
+mFilterD = mDefFilterD
+mNoPersist = mDefNoPersist
+mNoBorder = mDefNoBorder
+mNoWrapper = mDefNoWrapper
+mSharePoint = mDefSharePoint
+mDefView = mDefDefView
+mKeepVM = mDefKeepVM
+mNoLog = mDefNoLog
+mNavOnce = mDefNavOnce
+mShowFrames = mDefShowFrames
+mAlwaysNav = mDefAlwaysNav
+mSingleSel = mDefSingleSel
+mNavPane = mDefNavPane
+mPvwPane = mDefPvwPane
+mDetailsPane = mDefDetailsPane
+mOrgPane = mDefOrgPane
+mViewPane = mDefViewPane
+mCmdPane = mDefCmdPane
+mStatusPane = mDefStatusPane
+mQueryPane = mDefQueryPane
+mAdvQueryPane = mDefAdvQueryPane
+mRibbonPane = mDefRibbonPane
+mCustET = mDefCustET
+mCheck = mDefCheck
+mNoSelVb = mDefNoSelVb
+End Sub
+
+Private Sub UserControl_Resize() Handles UserControl.Resize
+On Error Resume Next
+If pExp IsNot Nothing Then
+    Dim prc As RECT
+    GetClientRect UserControl.hWnd, prc
+    pExp.SetRect 0, prc
+End If
+End Sub
+
+Private Sub UserControl_Initialize() Handles UserControl.Initialize
+    hShell32 = LoadLibrary("shell32.dll")
+    If hShell32 = 0 Then
+        DebugAppend "Failed to load shell32"
+    End If
+    DebugAppend "UserControl_Initialize"
+    Dim hDC As LongPtr
+    hDC = GetDC(0&)
+    m_ScaleX = GetDeviceCaps(hDC, LOGPIXELSX) / 96
+    DebugAppend "dpix=" & GetDeviceCaps(hDC, LOGPIXELSX) / 96
+    m_ScaleY = GetDeviceCaps(hDC, LOGPIXELSY) / 96
+    ReleaseDC 0&, hDC
+End Sub
+
+Private Sub UserControl_Terminate() Handles UserControl.Terminate
+    DebugAppend "UserControl_Terminate"
+    bTerm = True
+    If dwAdvCookie Then
+        pExp.Unadvise dwAdvCookie
+    End If
+    
+    If fDbgSetFilter Then
+    Dim pFiltSite As IFolderFilterSite
+    Set pFiltSite = pExp
+    If pFiltSite IsNot Nothing Then
+        pFiltSite.SetFilter Nothing
+    End If
+    End If
+
+    'Set up IServiceProvider services
+    ' Dim pSite As IObjectWithSite
+    ' Set pSite = pExp
+    ' If pSite IsNot Nothing Then
+    '     pSite.SetSite Nothing
+    ' End If
+    
+    Set siCurPath = Nothing
+    Set svCurView = Nothing
+    
+    If pExp IsNot Nothing Then
+        pExp.RemoveAll
+        pExp.SetOptions EBO_NONE
+        pExp.FillFromObject Nothing, EBF_NODROPTARGET
+        'pExp.Destroy()
+        Set pExp = Nothing
+    End If
+    
+End Sub
+Private Sub pvCreate()
+
+ReadActualWindowsVersion
+If bIsWinVistaOrGreater = False Then
+    Label1.Visible = True
+    Label1.Caption = "Windows XP or earlier not supported."
+    Exit Sub
+End If
+
+If Ambient.UserMode = False Then
+    lblTitle.Caption = mTitle
+    Exit Sub
+Else
+    lblTitle.Visible = False
+End If
+
+On Error GoTo e0
+
+Set pExp = New ExplorerBrowser
+
+Picture1.Visible = False
+
+If ((mFilter = "*") OrElse (mFilter = "*.*") OrElse (mFilter = "")) AndAlso _
+    ((mFilterD = "*") OrElse (mFilterD = "*.*") OrElse (mFilterD = "")) Then
+    'Master filter toggle-- if no filtering enabled, shut down filter procedure with a 
+    'simple boolean rather than compare ever file,
+    mFiltered = False
+Else
+    mFiltered = True
+End If
+    
+Dim prc As RECT
+Dim pfs As FOLDERSETTINGS
+Dim sPath As String
+Dim lFlag As EXPLORER_BROWSER_OPTIONS
+Dim psi As IShellItem
+
+If (mStartPath = "") Or (mStartPath = vbNullString) Then
+    sPath = ExpandEnvVars(mDefStartPath)
+Else
+    sPath = ExpandEnvVars(mStartPath)
+End If
+
+SHCreateItemFromParsingName StrPtr(sPath), Nothing, IID_IShellItem, psi
+If psi Is Nothing Then
+    SHCreateItemFromParsingName StrPtr(mDefStartPath), Nothing, IID_IShellItem, psi
+End If
+
+If mNoPersist Then lFlag = EBO_NOPERSISTVIEWSTATE
+If mNoLog Then lFlag = lFlag Or EBO_NOTRAVELLOG
+If mNoWrapper Then lFlag = lFlag Or EBO_NOWRAPPERWINDOW
+If mAlwaysNav Then lFlag = lFlag Or EBO_ALWAYSNAVIGATE
+If mNavOnce Then lFlag = lFlag Or EBO_NAVIGATEONCE
+If mNoBorder Then lFlag = lFlag Or EBO_NOBORDER
+If mSharePoint Then lFlag = lFlag Or EBO_HTMLSHAREPOINTVIEW
+If mShowFrames Then lFlag = lFlag Or EBO_SHOWFRAMES
+
+pfs.fFlags = FWF_ALIGNLEFT
+If mSingleSel Then pfs.fFlags = pfs.fFlags Or FWF_SINGLESEL
+If mCheck Then pfs.fFlags = pfs.fFlags Or FWF_AUTOCHECKSELECT Or FWF_CHECKSELECT
+
+pfs.ViewMode = mDefView
+
+prc.Right = Me.ScaleWidth * m_ScaleX
+prc.Bottom = Me.ScaleHeight * m_ScaleY
+
+Set pExp = New ExplorerBrowser
+pExp.Initialize Me.hWnd, prc, pfs
+pExp.SetOptions lFlag
+If mCustET <> "" Then pExp.SetEmptyText(mCustET)
+pExp.Advise Me, dwAdvCookie
+
+'The following is an alternative filtering method, if you implement this
+'one then disable ICommDlgBrowser_IncludeObject based filtering.
+If fDbgSetFilter Then
+Dim pFiltSite As IFolderFilterSite
+Set pFiltSite = pExp
+If pFiltSite IsNot Nothing Then
+    pFiltSite.SetFilter Me
+End If
+End If
+
+'Set up IServiceProvider services
+Dim pSite As IObjectWithSite
+Set pSite = pExp
+If pSite IsNot Nothing Then
+    pSite.SetSite Me
+End If
+
+If psi Is Nothing Then
+    pExp.BrowseToIDList VarPtr(0), SBSP_ABSOLUTE
+Else
+    pExp.BrowseToObject psi, SBSP_ABSOLUTE
+End If
+
+
+
+Exit Sub
+e0:
+DebugAppend CurrentComponentName & "::" & CurrentProcedureName & "->Error 0x" & Hex$(Err.Number) & ", " & Err.Description
+End Sub
+
+Private Function ExpandEnvVars(sIn As String) As String
+'Expand environment variables
+Dim sTmp As String
+Dim chs As Long
+
+sTmp = String$(MAX_PATH, 0)
+chs = ExpandEnvironmentStringsW(StrPtr(sIn), StrPtr(sTmp), MAX_PATH)
+If chs > 1& Then
+    ExpandEnvVars = Left$(sTmp, chs - 1&) 'It includes a null terminator
+Else
+    ExpandEnvVars = sIn
+End If
+
+End Function
+
+Public Sub BrowseGoBack()
+    pExp.BrowseToIDList 0, SBSP_NAVIGATEBACK
+End Sub
+Public Sub BrowseGoForward()
+    pExp.BrowseToIDList 0, SBSP_NAVIGATEFORWARD
+End Sub
+
+Public Sub BrowseToPath(sPath As String)
+If pExp Is Nothing Then Exit Sub
+Dim psi As IShellItem
+SHCreateItemFromParsingName StrPtr(sPath), Nothing, IID_IShellItem, psi
+If psi Is Nothing Then
+    DebugAppend "BrowseToPath->Could not create item for path."
+    Exit Sub
+End If
+Dim pPersist As IPersistIDList
+Set pPersist = psi
+Dim pidl As LongPtr
+pPersist.GetIDList pidl
+pExp.BrowseToIDList pidl, SBSP_ABSOLUTE
+End Sub
+
+Public Sub BrowseToObject(pObj As IUnknown)
+If pExp Is Nothing Then Exit Sub
+If pObj IsNot Nothing Then pExp.BrowseToObject pObj, SBSP_ABSOLUTE
+
+End Sub
+
+Public Sub BrowseToIDList(ByVal pidl As LongPtr)
+If pExp Is Nothing Then Exit Sub
+pExp.BrowseToIDList pidl, SBSP_ABSOLUTE
+End Sub
+
+Public Sub RefreshBrowser()
+If pExp IsNot Nothing Then
+    Dim pSV As IShellView
+    pExp.GetCurrentView IID_IShellView, pSV
+    pSV.Refresh()
+End If
+End Sub
+
+Public Sub ClearBrowser()
+    If pExp IsNot Nothing Then pExp.RemoveAll()
+End Sub
+
+
+[Description("Set the columns used by Details view. This takes a comma-delimited list of canonical names, e.g. System.ItemNameDisplay,System.ItemTypeText -- you could pass only System.ItemNameDisplay to clear all columns.")]
+Public Sub SetColumns(ByVal pszColumnList As String)
+    Dim pColMgr As IColumnManager
+    Dim sCol() As String
+    Dim pk() As PROPERTYKEY
+    Dim pkTmp As PROPERTYKEY
+    Dim i As Long
+    Dim nValid As Long
+    Dim hr As Long
+    If pszColumnList = "" Then Exit Sub
+    If pExp Is Nothing Then Exit Sub
+    sCol = Split(pszColumnList, ",")
+    For i = 0 To UBound(sCol)
+        hr = PSGetPropertyKeyFromName(StrPtr(sCol(i)), pkTmp)
+        If IsEqualPKEY(pkTmp, PKEY_Null) = False Then
+            ReDim Preserve pk(nValid)
+            pk(nValid) = pkTmp
+            nValid += 1
+        End If
+    Next
+    If nValid Then
+        Dim pfv As IFolderView2
+        pExp.GetCurrentView IID_IFolderView2, pfv
+        If pfv IsNot Nothing Then
+            Set pColMgr = pfv
+            pColMgr.SetColumns pk(0), nValid
+        End If
+    End If
+End Sub
+
+[Description("Set the columns used by Details view. This takes a pointer to the first member of an array of PROPERTYKEY and the 1-based count of items. WARNING: Specifying an invalid count may crash the app.")]
+Public Sub SetColumnByPKEY(ByVal ptrKey0 As LongPtr, ByVal cKeys As Long)
+    Dim pColMgr As IColumnManager
+    If cKeys Then
+        Dim pfv As IFolderView2
+        pExp.GetCurrentView IID_IFolderView2, pfv
+        If pfv IsNot Nothing Then
+            Set pColMgr = pfv
+            pColMgr.SetColumns ByVal ptrKey0, cKeys
+        End If
+    End If
+End Sub
+
+[Description("Populates an array of the currently selected full paths. The return value returns the selection count, which is also UBound(sPaths) + 1.")]
+Public Function GetSelectedItemPaths(sPaths() As String) As Long
+    On Error GoTo e0
+    If pExp IsNot Nothing Then
+        Dim pSV As IShellView
+        Dim pSIA As IShellItemArray
+        Dim nCt As Long
+        
+        pExp.GetCurrentView IID_IShellView, pSV
+        pSV.GetItemObject SVGIO_SELECTION, IID_IShellItemArray, pSIA
+        If pSIA IsNot Nothing Then
+            pSIA.GetCount nCt
+            If nCt = 0 Then
+                Return 0
+            Else
+                Dim i As Long
+                Dim pItem As IShellItem
+                Dim lpPath As LongPtr
+                ReDim sPaths(nCt - 1)
+                For i = 0 To nCt - 1
+                    pSIA.GetItemAt i, pItem
+                    pItem.GetDisplayName SIGDN_DESKTOPABSOLUTEPARSING, lpPath
+                    sPaths(i) = LPWSTRtoStr(lpPath)
+                    lpPath = 0
+                    Set pItem = Nothing
+                Next
+                Return nCt
+            End If
+        Else
+            Return 0
+        End If
+    Else
+        Return 0
+    End If
+Exit Function
+e0:
+DebugAppend CurrentComponentName & "::" & CurrentProcedureName & "->Error 0x" & Hex$(Err.Number) & ", " & Err.Description
+End Function
+
+[Description("Populates an array of the currently selected full paths. The return value returns the selection count, which is also the member count of IShellItems in the IShellItemArray.")]
+Public Function GetSelectedItemsArray(ppsia As IShellItemArray) As Long
+    If pExp IsNot Nothing Then
+        Dim pSV As IShellView
+        Dim nCt As Long
+        
+        pExp.GetCurrentView IID_IShellView, pSV
+        pSV.GetItemObject SVGIO_SELECTION, IID_IShellItemArray, ppsia
+        If ppsia IsNot Nothing Then
+            ppsia.GetCount nCt
+            Return nCt
+        Else
+            Return 0
+        End If
+    Else
+        Return 0
+    End If
+End Function
+
+[Description("Returns the current absolute parsing path as a String.")]
+Public Function GetCurrentPath() As String
+    If siCurPath IsNot Nothing Then
+        Dim lpPath As LongPtr
+        siCurPath.GetDisplayName SIGDN_DESKTOPABSOLUTEPARSING, lpPath
+        If lpPath Then
+            Return LPWSTRtoStr(lpPath)
+        End If
+    End If
+End Function
+[Description("Returns the pidl for the current path. The caller is responsible for freeing this as it's a clone.")]
+Public Function GetCurrentPathPidl() As LongPtr
+    If siCurPath IsNot Nothing Then
+        Dim pPst As IPersistIDList
+        Set pPst = siCurPath
+        If pPst IsNot Nothing Then
+            Dim pidl As LongPtr
+            pPst.GetIDList pidl
+            Return ILCloneFull(pidl)
+        End If
+    End If
+End Function
+Public Function GetCurrentPathItem() As IShellItem
+    Set GetCurrentPathItem = siCurPath
+End Function
+
+Public Function GetCurrentView(ByVal nView As ucexpGetView, ppv As IUnknown) As Long
+    Select Case nView
+        Case EB_GETCURVIEW_IFOLDERVIEW: pExp.GetCurrentView(IID_IFolderView, ppv)
+        Case EB_GETCURVIEW_IFOLDERVIEW2: pExp.GetCurrentView(IID_IFolderView2, ppv)
+        Case EB_GETCURVIEW_ISHELLVIEW: pExp.GetCurrentView(IID_IShellView, ppv)
+        Case EB_GETCURVIEW_ISHELLVIEW2: pExp.GetCurrentView(IID_IShellView2, ppv)
+        Case EB_GETCURVIEW_ISHELLVIEW3: pExp.GetCurrentView(IID_IShellView3, ppv)
+        Case EB_GETCURVIEW_ISHELLFOLDER: pExp.GetCurrentView(IID_IShellFolder, ppv)
+        Case EB_GETCURVIEW_ISHELLFOLDER2: pExp.GetCurrentView(IID_IShellFolder2, ppv)
+        Case EB_GETCURVIEW_ISHELLITEM: pExp.GetCurrentView(IID_IShellItem, ppv)
+        Case EB_GETCURVIEW_ISHELLITEM2: pExp.GetCurrentView(IID_IShellItem2, ppv)
+        Case EB_GETCURVIEW_ISHELLBROWSER: pExp.GetCurrentView(IID_IShellBrowser, ppv)
+    End Select
+    Return Err.LastHresult
+End Function
+
+Private Sub ReadActualWindowsVersion()
+'Read the Windows version independent of any compatibility shim
+'NOTE: This is not an exhaustive list of versions, it only checks for the versions relevant to this program.
+
+'A more fun way:
+Dim tPEB As PEB_XP 'Use minimal PEB version; OS version info always at 0x118 (x64)
+
+Dim hProc As LongPtr = GetCurrentProcess()
+Dim tProcInfo As PROCESS_BASIC_INFORMATION
+Dim cbRet As Long
+Dim ntStatus As Long
+
+ntStatus = NtQueryInformationProcess(hProc, ProcessBasicInformation, tProcInfo, LenB(tProcInfo), cbRet)
+
+If (ntStatus = STATUS_SUCCESS) And (cbRet > 0) Then
+    #If Win64 Then
+        CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &H128
+    #Else
+        CopyMemory tPEB, ByVal tProcInfo.PebBaseAddress, &HB4
+    #End If
+    
+    DebugAppend tPEB.OSMajorVersion & "." & tPEB.OSMinorVersion & "." & tPEB.OSBuildNumber
+    If tPEB.OSMajorVersion >= 10 Then
+        bIsWinVistaOrGreater = True
+        bIsWin8OrGreater = True
+        Exit Sub
+    End If
+    If tPEB.OSMajorVersion >= 6 Then
+        bIsWinVistaOrGreater = True
+        If (tPEB.OSMajorVersion >= 6) And (tPEB.OSMinorVersion >= 2) Then
+            bIsWin8OrGreater = True
+        End If
+    End If
+End If
+End Sub
+
+
+[Description("Display a custom set of folders/files. You can specify a custom column set by creting an array of PROPERTYKEY and passing VarPtr(pkey0) and the number of columns.")]
+Public Sub LoadCustomFileSet(sFullPaths() As String, Optional bNavOnce As Boolean = True, Optional viewMode As FOLDERVIEWMODE = FVM_DETAILS, Optional ByVal ptr_col As LongPtr, Optional ByVal nCols As Long)
+Dim tFS As FOLDERSETTINGS
+Dim pfv As IFolderView2
+Dim pColMgr As IColumnManager
+Dim lFlag As EXPLORER_BROWSER_OPTIONS
+
+tFS.ViewMode = FVM_DETAILS
+tFS.fFlags = FWF_AUTOARRANGE Or FWF_NOWEBVIEW
+
+If bNavOnce Then lFlag = EBO_NAVIGATEONCE
+
+
+pExp.SetOptions lFlag
+pExp.FillFromObject Nothing, EBF_NODROPTARGET
+pExp.GetCurrentView IID_IFolderView2, pfv
+If (pfv Is Nothing) = False Then
+    If (nCols > 0) AndAlso (ptr_col <> 0) Then
+        Dim uCol() As PROPERTYKEY
+        ReDim uCol(nCols - 1)
+        CopyMemory uCol(0), ByVal ptr_col, LenB(uCol(0)) * nCols
+        Set pColMgr = pfv
+        pColMgr.SetColumns uCol(0), 3&
+    End If
+    pfv.GetFolder IID_IResultsFolder, pRF
+    Dim i As Long
+    Dim siItem As IShellItem
+    For i = 0 To UBound(sFullPaths)
+        SHCreateItemFromParsingName StrPtr(sFullPaths(i)), Nothing, IID_IShellItem, siItem
+        If (siItem IsNot Nothing) Then
+            pRF.AddItem siItem
+        End If
+    Next
+Else
+    DebugAppend "LoadCustomFileSet::Error->No folderview"
+End If
+End Sub
+
+
+End Class
